@@ -1,0 +1,31 @@
+{
+    "files.associations": {
+        "array": "cpp",
+        "deque": "cpp",
+        "string": "cpp",
+        "unordered_map": "cpp",
+        "vector": "cpp",
+        "string_view": "cpp",
+        "initializer_list": "cpp",
+        "*.tcc": "cpp",
+        "mstd_functional": "cpp",
+        "mstd_iterator": "cpp",
+        "mstd_memory": "cpp",
+        "mstd_new": "cpp",
+        "mstd_tuple": "cpp",
+        "mstd_type_traits": "cpp",
+        "mstd_utility": "cpp",
+        "optional": "cpp",
+        "limits": "cpp",
+        "new": "cpp",
+        "cmath": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp",
+        "istream": "cpp",
+        "ostream": "cpp",
+        "ratio": "cpp",
+        "system_error": "cpp",
+        "functional": "cpp",
+        "tuple": "cpp"
+    }
+}

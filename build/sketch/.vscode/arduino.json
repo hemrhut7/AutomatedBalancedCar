@@ -1,0 +1,6 @@
+#line 1 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\.vscode\\arduino.json"
+{
+    "sketch": "AutomatedBalancedCar.ino",
+    "output": "build",
+    "board": "arduino:mbed_nano:nano33ble"
+}

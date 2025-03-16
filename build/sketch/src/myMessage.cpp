@@ -1,0 +1,60 @@
+#line 1 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\src\\myMessage.cpp"
+# include "myMessage.h"
+
+
+MyCRC::MyCRC(uint32_t width, uint32_t polynomial, uint32_t initial_remainder)
+    : WIDTH(width), POLYNOMIAL(polynomial), REMAINDER(initial_remainder), crcFailCnt(0) {
+    NUM_BYTE = (WIDTH + 7) / 8;
+}
+
+// Calculate CRC
+void MyCRC::calCRC(uint8_t *message, int num_msg) {
+    uint32_t TOPBIT = (1 << (WIDTH - 1));
+    uint32_t mask = (1 << WIDTH) - 1;
+    uint32_t remainder = REMAINDER;
+
+    for (int n = 0; n < num_msg - NUM_BYTE; n++) {
+        remainder ^= (message[n] << (WIDTH - 8));
+
+        for (int i = 0; i < 8; i++) {
+            if (remainder & TOPBIT) {
+                remainder = ((remainder << 1) & mask) ^ POLYNOMIAL;
+            } else {
+                remainder = (remainder << 1) & mask;
+            }
+        }
+    }
+
+    for (int i = 0; i < NUM_BYTE; i++) {
+        message[num_msg - NUM_BYTE + i] = (remainder >> (8 * (NUM_BYTE - 1 - i))) & 0xFF;
+    }
+}
+
+
+void convert2Sign_4B(unsigned long* value, uint8_t* buf){
+    *value = *buf<<24 | *(buf+1)<<16 | *(buf+2)<<8 | *(buf+3);
+  }
+  
+
+void convert2Sign_2B(uint16_t* value, uint8_t* buf){
+    *value = *buf<<8 | *(buf+1);
+}
+
+
+int appendDataToBuffer(char *buffer, const float value, int decimal) {
+    int n = 0; // 用來追蹤新增的字元數
+    n += sprintf(buffer + n, "%.*f,", decimal, value);
+    return n; // 返回新增的字元數
+}
+  
+  
+int appendDataToBuffer(char *buffer, const float *value_array, int num_data, int decimal) {
+    int n = 0; // 用來追蹤新增的字元數
+    for (int i = 0; i < num_data; i++) {
+        n += sprintf(buffer + n, "%.*f,", decimal, value_array[i]); // 格式化並添加數據到 buffer
+    }
+    return n; // 返回新增的字元數
+}
+  
+
+

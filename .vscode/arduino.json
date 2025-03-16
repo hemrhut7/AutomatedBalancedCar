@@ -1,0 +1,5 @@
+{
+    "sketch": "AutomatedBalancedCar.ino",
+    "output": "build",
+    "board": "arduino:mbed_nano:nano33ble"
+}
