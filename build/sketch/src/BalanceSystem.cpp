@@ -153,8 +153,8 @@ void BalanceSystem::setTargetSpeed(float speed){
     targetSpeed = speed;
 }
 
-void BalanceSystem::setTargetRate(float Rate){
-    targetRate = Rate;
+void BalanceSystem::setTargetRateZ(float Rate){
+    targetRateZ = Rate;
 }
 
 void BalanceSystem::updateState(float vel, float pitch, float* omg){
@@ -185,7 +185,7 @@ void BalanceSystem::updateSpeed(){
 }
 
 void BalanceSystem::updateRate(){
-    float output = RatePID.compute(current_t, targetRate, current_RateZ);
+    float output = RatePID.compute(current_t, targetRateZ, current_RateZ);
     outputLeft += output;
     outputRight -= output;
 }

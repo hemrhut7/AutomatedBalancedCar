@@ -1,5 +1,4 @@
 
-#include <Arduino.h>
 #include <ArduinoBLE.h>
 #include "TimerInterrupt_Generic.h"
 #include "src/myI2CSensor.h"
@@ -10,20 +9,21 @@
 #define MOTOR_L_DIR1_PIN    4
 #define MOTOR_L_DIR2_PIN    4
 #define MOTOR_L_INT_PIN     2
-#define MOTOR_L_DTBY_PIN     2
+#define MOTOR_L_DTBY_PIN    2
 
 #define MOTOR_R_PWM_PIN     6
 #define MOTOR_R_DIR1_PIN    7
 #define MOTOR_R_DIR2_PIN    7
 #define MOTOR_R_INT_PIN     3
-#define MOTOR_R_DTBY_PIN     2
+#define MOTOR_R_DTBY_PIN    2
 
-#define MOTOR_SPEED_UDR   2
+#define MOTOR_SPEED_UDR     2
 
 void readIMU_ISR();
 void ISR_MotorLeft();
 void ISR_MotorRight();
 void ISR_motor_timer();
+void BLE_onConnect();
 
 const unsigned char HEADER[2] = {0xFA, 0xFF};
 const bool is_output_bin = true;
@@ -170,6 +170,7 @@ void BLE_onConnect() {
         Serial.println(central.address());
 
         while (central.connected()) {
+            // read data
             if (BLE_chart.written()) {
                 const uint8_t* receivedData = BLE_chart.value();
                 Serial.print("Received data: ");
@@ -179,7 +180,7 @@ void BLE_onConnect() {
                 Serial.println();
             }
 
-            // 傳輸數據
+            // send data
             unsigned long currentTime = millis() - t00;
             BLE_chart.writeValue(currentTime);
 
@@ -190,6 +191,17 @@ void BLE_onConnect() {
             // n += appendDataToBuffer(buffer+n, acc.float_val, 3, 4);
             // n += appendDataToBuffer(buffer+n, temp.float_val, 1);
             // n += appendDataToBuffer(buffer+n, ori.float_val, 3, 2);
+            // BLE_chart.writeValue(buffer);
+
+            // int buffer_size = 50;
+            // uint8_t buffer[buffer_size];
+            // memcpy(buffer, HEADER, 2);
+            // memcpy(buffer + 2, pre_time.bin_val, 4);
+            // memcpy(buffer + 6, omg.bin_val, 12);
+            // memcpy(buffer + 18, acc.bin_val, 12);
+            // memcpy(buffer + 30, temp.bin_val, 4);
+            // memcpy(buffer + 34, ori.bin_val, 12);
+            // myCRC.calCRC(buffer, buffer_size);
             // BLE_chart.writeValue(buffer);
 
             delay(1000);

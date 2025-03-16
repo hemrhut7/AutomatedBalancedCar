@@ -56,7 +56,7 @@ class BalanceSystem {
         
         void setTargetAngle(float angle);
         void setTargetSpeed(float speed);
-        void setTargetRate(float Rate);
+        void setTargetRateZ(float Rate);
         void updateState(float vel, float pitch, float* omg);
         float getOutputLeft(){return outputLeft;};
         float getOutputRight(){return outputRight;};
@@ -70,11 +70,11 @@ class BalanceSystem {
         unsigned long current_t = 0;
         float current_angle = 0;
         float current_speed = 0;
-        float current_Rate = 0;
+        float current_RateX = 0;
+        float current_RateZ = 0;
 
         float targetAngle = 0;
         float targetSpeed = 0;
-        float targetRateX = 0;
         float targetRateZ = 0;
 
         float outputLeft = 0;
