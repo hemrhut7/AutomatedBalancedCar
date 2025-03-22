@@ -144,16 +144,19 @@ int BoschSensorClass::getIMUData(float (&omg)[3], float (&acc)[3]) {
 
 // Magnetometer
 int BoschSensorClass::getMAGData(float (&mag)[3]) {
-    struct bmm150_mag_data mag_data;
-    int const rc = bmm150_read_mag_data(&mag_data, &bmm1);
-    mag[1] = mag_data.x;
-    mag[0] = mag_data.y;
-    mag[2] = -mag_data.z;
-  
-    if (rc == BMM150_OK)
-      return 1;
-    else
-      return 0;
+    if (magneticFieldAvailable()){
+        struct bmm150_mag_data mag_data;
+        int const rc = bmm150_read_mag_data(&mag_data, &bmm1);
+        mag[1] = mag_data.x;
+        mag[0] = mag_data.y;
+        mag[2] = -mag_data.z;
+    
+        if (rc == BMM150_OK)
+            return 1;
+        else
+            return 0;
+    }
+    return 0;
   }
 
 int BoschSensorClass::magneticFieldAvailable() {
@@ -242,9 +245,6 @@ int8_t BoschSensorClass::configure_sensor(struct bmm150_dev *dev)
 
     if (rslt == BMM150_OK)
     {
-        /* Setting the preset mode as Low power mode
-         * i.e. data rate = 10Hz, XY-rep = 1, Z-rep = 2
-         */
         settings.preset_mode = BMM150_PRESETMODE_HIGHACCURACY;
         rslt = bmm150_set_presetmode(&settings, dev);
 
@@ -482,4 +482,86 @@ void BoschSensorClass::print_rslt(int8_t rslt)
       panic_led_trap();
       break;
   }
+}
+
+
+
+// Barometer
+LPS22HBClass::LPS22HBClass(TwoWire& wire) :
+  _wire(&wire),
+  _initialized(false)
+{
+}
+
+int LPS22HBClass::begin()
+{
+  _wire->begin();
+
+  if (i2cRead(LPS22HB_WHO_AM_I_REG) != 0xb1) {
+    end();
+    return 0;
+  }
+
+  _initialized = true;
+  return 1;
+}
+
+void LPS22HBClass::end()
+{
+  #if defined(WIRE_HAS_END) && WIRE_HAS_END
+  _wire->end();
+  #endif
+  _initialized = false;
+}
+
+bool LPS22HBClass::getBARData(float &bar)
+{
+  if (_initialized == true) {
+    // trigger one shot
+    i2cWrite(LPS22HB_CTRL2_REG, 0x01);
+
+    // wait for ONE_SHOT bit to be cleared by the hardware
+    if ((i2cRead(LPS22HB_CTRL2_REG) & 0x01) == 0) {
+        bar = (i2cRead(LPS22HB_PRESS_OUT_XL_REG) |
+        (i2cRead(LPS22HB_PRESS_OUT_L_REG) << 8) |
+        (i2cRead(LPS22HB_PRESS_OUT_H_REG) << 16)) / 40960.0;
+        return true;
+    }
+  }
+  return false;
+}
+
+float LPS22HBClass::geTEMPData(void)
+{
+  float reading = (i2cRead(LPS22HB_TEMP_OUT_L_REG) << 0) | 
+          (i2cRead(LPS22HB_TEMP_OUT_H_REG) << 8);
+
+  return reading/100;
+}
+
+int LPS22HBClass::i2cRead(uint8_t reg)
+{
+  _wire->beginTransmission(LPS22HB_ADDRESS);
+  _wire->write(reg);
+  if (_wire->endTransmission(false) != 0) {
+    return -1;
+  }
+
+  if (_wire->requestFrom(LPS22HB_ADDRESS, 1) != 1) {
+    return -1;
+  }
+  
+  return _wire->read();
+}
+
+int LPS22HBClass::i2cWrite(uint8_t reg, uint8_t val)
+{
+  _wire->beginTransmission(LPS22HB_ADDRESS);
+  _wire->write(reg);
+  _wire->write(val);
+  if (_wire->endTransmission() != 0) {
+    return 0;
+  }
+
+  return 1;
 }

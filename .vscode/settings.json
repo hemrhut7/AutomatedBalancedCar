@@ -27,6 +27,7 @@
         "system_error": "cpp",
         "functional": "cpp",
         "tuple": "cpp",
-        "cstddef": "cpp"
+        "cstddef": "cpp",
+        "thread": "cpp"
     }
 }

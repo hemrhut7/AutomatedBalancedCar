@@ -35,6 +35,7 @@ volatile bool imu_ready = false, motor_ready = false;
 
 MyCRC myCRC; 
 BoschSensorClass sensor(Wire1);
+LPS22HBClass baro(Wire1);
 Navigation::ComplementaryFilter my_cpf;
 SYSTEM_STATE sys_state = INITIALIZING;
 
@@ -57,6 +58,13 @@ void setup()
     }
     sensor.onInterrupt(ISR_readIMU);
     Serial.println("Connect to IMU");
+
+    // Initialize BARO
+    if (!baro.begin()){
+        Serial.println("Failed to initialize BARO!");
+        while (1) {blinkLED();}
+    }
+    Serial.println("Connect to BARO");
 
     // Initialize CPF Parameters
     my_cpf.setIMUError(Nano33, 100);
@@ -118,7 +126,7 @@ void INS(uint8_t* buffer) {
             pre_time = imu_time.ulong_val;
             sensor.getIMUData(omg.float_val, acc.float_val);
             sensor.getMAGData(mag.float_val);
-            // bar.float_val = sensor.getBarData();
+            baro.getBARData(bar.float_val);
 
             // calculate attitude
             my_cpf.run(imu_time.ulong_val * 1e-6, omg.float_val, acc.float_val);  
@@ -135,7 +143,7 @@ void INS(uint8_t* buffer) {
             memcpy(buffer + 42, ori.bin_val, 12);
             memcpy(buffer + 54, bar.bin_val, 4);
             myCRC.calCRC(buffer, 62);
-            // Serial.write(buffer, 62);
+            Serial.write(buffer, 62);
         }
     }
 }
