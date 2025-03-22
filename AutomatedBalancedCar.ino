@@ -1,4 +1,3 @@
-// #include <ArduinoBLE.h>
 #include "TimerInterrupt_Generic.h"
 #include "src/sensor/myI2CSensor.h"
 #include "src/Navigation/MyNavigation.h"
@@ -21,12 +20,12 @@
 #define TIME_SCALE 0.9891
 
 
+void blinkLED();
+void INS(uint8_t* buffer);
 void ISR_readIMU();
+void ISR_motor_timer();
 // void ISR_MotorLeft();
 // void ISR_MotorRight();
-void ISR_motor_timer();
-// void BLE_onConnect();
-void blinkLED();
 
 const unsigned char HEADER[2] = {0xFA, 0xFF};
 unsigned long t0, pre_time;
@@ -43,11 +42,6 @@ SYSTEM_STATE sys_state = INITIALIZING;
 // MotorPID motorLeft(MOTOR_L_PWM_PIN, MOTOR_L_DIR1_PIN, MOTOR_L_DIR2_PIN, MOTOR_L_DTBY_PIN);
 // MotorPID motorRight(MOTOR_R_PWM_PIN, MOTOR_R_DIR1_PIN, MOTOR_R_DIR2_PIN, MOTOR_R_DTBY_PIN);
 NRF52_MBED_Timer ITimer(NRF_TIMER_1);
-
-// BLEService BLE_service("180D"); // 自定義服務 UUID
-// BLECharacteristic BLE_chart("2A37", BLERead | BLEWrite, 50); // 自定義特徵 UUID
-
-
 
 
 void setup()
@@ -83,18 +77,6 @@ void setup()
           while (1) {blinkLED();}
     }
 
-    // // Initialize BLE
-    // if (!BLE.begin()) {
-    //     Serial.println("Starting BLE failed!");
-    //     while (1);
-    // }
-    // BLE.setLocalName("BalancedCar");
-    // BLE.setAdvertisedService(BLE_service);
-    // BLE_service.addCharacteristic(BLE_chart);
-    // BLE_chart.writeValue("Ready");
-    // BLE.advertise();
-    // Serial.println("Bluetooth device active, waiting for connections...");
-    
     // Initialize variables
     t0 = micros();
     imu_time.ulong_val = micros() - t0;
@@ -105,8 +87,27 @@ void setup()
 
 void loop()
 {
-    // BLE_onConnect();
+    uint8_t buffer[62];  // 根據需要的總長度來分配buffer
+    INS(buffer);
+    // BLE_TX(buffer);
+    
+    if (motor_ready){
+        motor_ready = false;
+        // Serial.println("motor ready");
+        // motorLeft.updateSpeed(MOTOR_SPEED_UDR);
+        // motorRight.updateSpeed(MOTOR_SPEED_UDR);
+    }
 
+    // PLL
+    // float mean_vel = (motorLeft.getSpeed() + motorRight.getSpeed()) / 2; 
+    // my_balance_system.updateState(mean_vel, ori.float_val[0], new_omg.float_val);
+    // motorLeft.update(my_balance_system.getOutputLeft());
+    // motorRight.update(my_balance_system.getOutputRight());
+    
+    blinkLED();
+}
+
+void INS(uint8_t* buffer) {
     if (imu_ready && sys_state == IMU_MEASURING) {    
         imu_ready = false;
 
@@ -125,14 +126,7 @@ void loop()
             my_cpf.getCaliRate(omg.float_val, new_omg.float_val);
             my_cpf.getCaliACC(acc.float_val, new_acc.float_val);
             
-            // PLL
-            // float mean_vel = (motorLeft.getSpeed() + motorRight.getSpeed()) / 2; 
-            // my_balance_system.updateState(mean_vel, ori.float_val[0], new_omg.float_val);
-            // motorLeft.update(my_balance_system.getOutputLeft());
-            // motorRight.update(my_balance_system.getOutputRight());
-
             // transport data by byte
-            uint8_t buffer[62];  // 根據需要的總長度來分配buffer
             memcpy(buffer, HEADER, 2);
             memcpy(buffer + 2, imu_time.bin_val, 4);
             memcpy(buffer + 6, omg.bin_val, 12);
@@ -144,17 +138,6 @@ void loop()
             // Serial.write(buffer, 62);
         }
     }
-
-    if (motor_ready){
-        motor_ready = false;
-        Serial.println("motor ready");
-    }
-
-    blinkLED();
-}
-
-void ISR_readIMU(){
-    imu_ready = true;
 }
 
 void blinkLED() {
@@ -203,50 +186,10 @@ void blinkLED() {
 //     motorRight.encoderISR();
 // }
 
-void ISR_motor_timer()
-{   
-    motor_ready = true;
-	// motorLeft.updateSpeed(MOTOR_SPEED_UDR);
-    // motorRight.updateSpeed(MOTOR_SPEED_UDR);
+void ISR_readIMU(){
+    imu_ready = true;
 }
 
-// void BLE_onConnect() {
-//     BLEDevice central = BLE.central();
-//     unsigned long t00 = millis();
-//     if (central) {
-//         Serial.print("Connected to central: ");
-//         Serial.println(central.address());
-
-//         while (central.connected()) {
-//             // read data
-//             if (BLE_chart.written()) {
-//                 const uint8_t* receivedData = BLE_chart.value();
-//                 Serial.print("Received data: ");
-//                 for (int i = 0; i < BLE_chart.valueLength(); i++) {
-//                     Serial.print(receivedData[i]); Serial.print(' ');
-//                 }
-//                 Serial.println();
-//             }
-
-//             // send data
-//             unsigned long currentTime = millis() - t00;
-//             BLE_chart.writeValue(currentTime);
-
-//             // int buffer_size = 50;
-//             // uint8_t buffer[buffer_size];
-//             // memcpy(buffer, HEADER, 2);
-//             // memcpy(buffer + 2, imu_time.bin_val, 4);
-//             // memcpy(buffer + 6, omg.bin_val, 12);
-//             // memcpy(buffer + 18, acc.bin_val, 12);
-//             // memcpy(buffer + 30, temp.bin_val, 4);
-//             // memcpy(buffer + 34, ori.bin_val, 12);
-//             // myCRC.calCRC(buffer, buffer_size);
-//             // BLE_chart.writeValue(buffer);
-
-//             delay(1000);
-//         }
-
-//         Serial.print("Disconnected from central: ");
-//         Serial.println(central.address());
-//     }
-// }
+void ISR_motor_timer() {   
+    motor_ready = true;
+}
