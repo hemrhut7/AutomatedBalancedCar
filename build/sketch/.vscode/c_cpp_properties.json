@@ -13,8 +13,6 @@
             "includePath": [
                 "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\cores\\arduino",
                 "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\variants\\ARDUINO_NANO33BLE",
-                "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\ArduinoBLE\\src",
-                "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\TimerInterrupt_Generic\\src",
                 "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\SparkFun_BMI270_Arduino_Library\\src",
                 "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\libraries\\Wire",
                 "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\libraries\\SPI",

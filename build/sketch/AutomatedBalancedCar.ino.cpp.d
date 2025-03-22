@@ -110,24 +110,6 @@ C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\AutomatedBalan
  C:\Users\hemrh\AppData\Local\Arduino15\packages\arduino\hardware\mbed_nano\4.2.1\cores\arduino/api/HardwareSerial.h \
  C:\Users\hemrh\AppData\Local\Arduino15\packages\arduino\hardware\mbed_nano\4.2.1\cores\arduino/timer.h \
  C:\Users\hemrh\AppData\Local\Arduino15\packages\arduino\hardware\mbed_nano\4.2.1\cores\arduino/overloads.h \
- C:\Users\hemrh\Documents\Arduino\libraries\ArduinoBLE\src/ArduinoBLE.h \
- C:\Users\hemrh\Documents\Arduino\libraries\ArduinoBLE\src/local/BLELocalDevice.h \
- C:\Users\hemrh\Documents\Arduino\libraries\ArduinoBLE\src/BLEDevice.h \
- C:\Users\hemrh\Documents\Arduino\libraries\ArduinoBLE\src/BLEService.h \
- C:\Users\hemrh\Documents\Arduino\libraries\ArduinoBLE\src/BLECharacteristic.h \
- C:\Users\hemrh\Documents\Arduino\libraries\ArduinoBLE\src/BLEDescriptor.h \
- C:\Users\hemrh\Documents\Arduino\libraries\ArduinoBLE\src/BLEService.h \
- C:\Users\hemrh\Documents\Arduino\libraries\ArduinoBLE\src/BLEAdvertisingData.h \
- C:\Users\hemrh\Documents\Arduino\libraries\ArduinoBLE\src/utility/BLEUuid.h \
- C:\Users\hemrh\Documents\Arduino\libraries\ArduinoBLE\src/BLEProperty.h \
- C:\Users\hemrh\Documents\Arduino\libraries\ArduinoBLE\src/BLEStringCharacteristic.h \
- C:\Users\hemrh\Documents\Arduino\libraries\ArduinoBLE\src/BLETypedCharacteristics.h \
- C:\Users\hemrh\Documents\Arduino\libraries\ArduinoBLE\src/BLETypedCharacteristic.h \
- C:\Users\hemrh\Documents\Arduino\libraries\ArduinoBLE\src/utility/btct.h \
- C:\Users\hemrh\Documents\Arduino\libraries\TimerInterrupt_Generic\src/TimerInterrupt_Generic.h \
- C:\Users\hemrh\Documents\Arduino\libraries\TimerInterrupt_Generic\src/TimerInterrupt_Generic_Debug.h \
- C:\Users\hemrh\Documents\Arduino\libraries\TimerInterrupt_Generic\src/NRF52_MBED_TimerInterrupt_Generic.h \
- C:\Users\hemrh\AppData\Local\Arduino15\packages\arduino\hardware\mbed_nano\4.2.1\cores\arduino/mbed/targets/TARGET_NORDIC/TARGET_NRF5x/TARGET_SDK_15_0/modules/nrfx/hal/nrf_timer.h \
  C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\src/myI2CSensor.h \
  C:\Users\hemrh\Documents\Arduino\libraries\SparkFun_BMI270_Arduino_Library\src/SparkFun_BMI270_Arduino_Library.h \
  C:\Users\hemrh\AppData\Local\Arduino15\packages\arduino\hardware\mbed_nano\4.2.1\libraries\Wire/Wire.h \
@@ -375,5 +357,4 @@ C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\AutomatedBalan
  c:\users\hemrh\documents\arduino\libraries\eigen\arduinoeigen\eigen\src\eigenvalues\realqz.h \
  C:\Users\hemrh\Documents\Arduino\libraries\Eigen/ArduinoEigen/Eigen/src/Eigenvalues/MatrixBaseEigenvalues.h \
  C:\Users\hemrh\Documents\Arduino\libraries\Eigen/ArduinoEigen/ArduinoEigenExtension.h \
- C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\src/Navigation/SensorParams.h \
- C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\src/BalanceSystem.h
+ C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\src/Navigation/SensorParams.h

@@ -86,5 +86,12 @@ class BalanceSystem {
         void updateRate();
 };
 
+typedef enum {
+    INITIALIZING,
+    IMU_MEASURING,
+    CONFIGURING,
+    
+}SYSTEM_STATE;
+
 
 #endif

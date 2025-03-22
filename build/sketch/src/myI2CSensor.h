@@ -12,7 +12,7 @@ class Nano33BLESensor
 {
 private:
     BMI270 imu;
-    volatile my_data_3f omg, acc;
+    volatile float omg[3] = {0, 0, 0}, acc[3] = {0, 0, 0};
     volatile bool gyroDataReady = false;
     volatile bool acclDataReady = false;
 public:
@@ -20,8 +20,8 @@ public:
     ~Nano33BLESensor();
     bool begin();
     void enableIMUInterrupt();
-    void readIMU(float* gyro, float* accl);
-    bool readIMU_ISR(float* gyro, float* accl);
+    void readIMU(float (&gyro)[3], float (&accl)[3]);
+    bool readIMU_ISR(float (&gyro)[3], float (&accl)[3]);
 };
 
 

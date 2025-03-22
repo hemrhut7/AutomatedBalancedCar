@@ -33,7 +33,7 @@ void Nano33BLESensor::enableIMUInterrupt(){
     imu.setInterruptPinConfig(intPinConfig);
 }
 
-void Nano33BLESensor::readIMU(float* gyro, float* accl){
+void Nano33BLESensor::readIMU(float (&gyro)[3], float (&accl)[3]){
     imu.getSensorData();
     accl[0] = imu.data.accelX;
     accl[1] = imu.data.accelY;
@@ -43,16 +43,16 @@ void Nano33BLESensor::readIMU(float* gyro, float* accl){
     gyro[2] = imu.data.gyroZ;
 }
 
-bool Nano33BLESensor::readIMU_ISR(float* gyro, float* accl){
+bool Nano33BLESensor::readIMU_ISR(float (&gyro)[3], float (&accl)[3]){
     uint16_t interruptStatus = 0;
     imu.getInterruptStatus(&interruptStatus);
 
     if (!gyroDataReady){
         if(interruptStatus & BMI2_GYR_DRDY_INT_MASK){
             imu.getSensorData();
-            omg.float_val[0] = imu.data.gyroX;
-            omg.float_val[1] = imu.data.gyroY;
-            omg.float_val[2] = imu.data.gyroZ;
+            omg[0] = imu.data.gyroX;
+            omg[1] = imu.data.gyroY;
+            omg[2] = imu.data.gyroZ;
             gyroDataReady = true;
         }
     }
@@ -60,9 +60,9 @@ bool Nano33BLESensor::readIMU_ISR(float* gyro, float* accl){
     if (!acclDataReady){
         if(interruptStatus & BMI2_ACC_DRDY_INT_MASK){
             imu.getSensorData();
-            acc.float_val[0] = imu.data.accelX;
-            acc.float_val[1] = imu.data.accelY;
-            acc.float_val[2] = imu.data.accelZ;
+            acc[0] = imu.data.accelX;
+            acc[1] = imu.data.accelY;
+            acc[2] = imu.data.accelZ;
             acclDataReady = true;
         }
     }
@@ -71,8 +71,8 @@ bool Nano33BLESensor::readIMU_ISR(float* gyro, float* accl){
         gyroDataReady = false;
         acclDataReady = false;
         for (int i=0;i<3;i++){
-            accl[i] = acc.float_val[i];
-            gyro[i] = omg.float_val[i];
+            accl[i] = acc[i];
+            gyro[i] = omg[i];
         }
         return true;
     }

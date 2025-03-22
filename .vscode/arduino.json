@@ -1,5 +1,6 @@
 {
     "sketch": "AutomatedBalancedCar.ino",
     "output": "build",
-    "board": "arduino:mbed_nano:nano33ble"
+    "board": "arduino:mbed_nano:nano33ble",
+    "port": "COM3"
 }
