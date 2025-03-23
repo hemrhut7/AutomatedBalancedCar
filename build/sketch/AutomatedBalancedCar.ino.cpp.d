@@ -110,8 +110,11 @@ C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\AutomatedBalan
  C:\Users\hemrh\AppData\Local\Arduino15\packages\arduino\hardware\mbed_nano\4.2.1\cores\arduino/api/HardwareSerial.h \
  C:\Users\hemrh\AppData\Local\Arduino15\packages\arduino\hardware\mbed_nano\4.2.1\cores\arduino/timer.h \
  C:\Users\hemrh\AppData\Local\Arduino15\packages\arduino\hardware\mbed_nano\4.2.1\cores\arduino/overloads.h \
- C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\src/myI2CSensor.h \
- C:\Users\hemrh\Documents\Arduino\libraries\SparkFun_BMI270_Arduino_Library\src/SparkFun_BMI270_Arduino_Library.h \
+ C:\Users\hemrh\Documents\Arduino\libraries\TimerInterrupt_Generic\src/TimerInterrupt_Generic.h \
+ C:\Users\hemrh\Documents\Arduino\libraries\TimerInterrupt_Generic\src/TimerInterrupt_Generic_Debug.h \
+ C:\Users\hemrh\Documents\Arduino\libraries\TimerInterrupt_Generic\src/NRF52_MBED_TimerInterrupt_Generic.h \
+ C:\Users\hemrh\AppData\Local\Arduino15\packages\arduino\hardware\mbed_nano\4.2.1\cores\arduino/mbed/targets/TARGET_NORDIC/TARGET_NRF5x/TARGET_SDK_15_0/modules/nrfx/hal/nrf_timer.h \
+ C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\src/sensor/myI2CSensor.h \
  C:\Users\hemrh\AppData\Local\Arduino15\packages\arduino\hardware\mbed_nano\4.2.1\libraries\Wire/Wire.h \
  C:\Users\hemrh\AppData\Local\Arduino15\packages\arduino\hardware\mbed_nano\4.2.1\cores\arduino/api/HardwareI2C.h \
  C:\Users\hemrh\AppData\Local\Arduino15\packages\arduino\hardware\mbed_nano\4.2.1\cores\arduino/api/deprecated/Print.h \
@@ -154,12 +157,12 @@ C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\AutomatedBalan
  C:\Users\hemrh\AppData\Local\Arduino15\packages\arduino\hardware\mbed_nano\4.2.1\cores\arduino/mbed/rtos/include/rtos/MemoryPool.h \
  C:\Users\hemrh\AppData\Local\Arduino15\packages\arduino\hardware\mbed_nano\4.2.1\cores\arduino/mbed/rtos/include/rtos/EventFlags.h \
  C:\Users\hemrh\AppData\Local\Arduino15\packages\arduino\hardware\mbed_nano\4.2.1\cores\arduino/mbed/rtos/include/rtos/ConditionVariable.h \
- C:\Users\hemrh\AppData\Local\Arduino15\packages\arduino\hardware\mbed_nano\4.2.1\libraries\SPI/SPI.h \
- C:\Users\hemrh\AppData\Local\Arduino15\packages\arduino\hardware\mbed_nano\4.2.1\cores\arduino/api/HardwareSPI.h \
- C:\Users\hemrh\Documents\Arduino\libraries\SparkFun_BMI270_Arduino_Library\src/bmi270_api/bmi270.h \
- C:\Users\hemrh\Documents\Arduino\libraries\SparkFun_BMI270_Arduino_Library\src/bmi270_api/bmi2.h \
- C:\Users\hemrh\Documents\Arduino\libraries\SparkFun_BMI270_Arduino_Library\src/bmi270_api/bmi2_defs.h \
- C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\src/myMessage.h \
+ C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\src/sensor/BMI270-Sensor-API/bmi270.h \
+ C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\src/sensor/BMI270-Sensor-API/bmi2.h \
+ C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\src/sensor/BMI270-Sensor-API/bmi2_defs.h \
+ C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\src/sensor/BMM150-Sensor-API/bmm150.h \
+ C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\src/sensor/BMM150-Sensor-API/bmm150_defs.h \
+ C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\src/sensor/myMessage.h \
  C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\src/Navigation/MyNavigation.h \
  C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\src/Navigation/Orientation.h \
  C:\Users\hemrh\Documents\Arduino\libraries\Eigen/ArduinoEigenDense.h \
@@ -357,4 +360,5 @@ C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\AutomatedBalan
  c:\users\hemrh\documents\arduino\libraries\eigen\arduinoeigen\eigen\src\eigenvalues\realqz.h \
  C:\Users\hemrh\Documents\Arduino\libraries\Eigen/ArduinoEigen/Eigen/src/Eigenvalues/MatrixBaseEigenvalues.h \
  C:\Users\hemrh\Documents\Arduino\libraries\Eigen/ArduinoEigen/ArduinoEigenExtension.h \
- C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\src/Navigation/SensorParams.h
+ C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\src/Navigation/SensorParams.h \
+ C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\src/BalanceSystem.h

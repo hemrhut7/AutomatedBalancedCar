@@ -5,6 +5,20 @@
 #include <deque>
 
 
+#define MOTOR_L_PWM_PIN     5
+#define MOTOR_L_DIR1_PIN    4
+#define MOTOR_L_DIR2_PIN    4
+#define MOTOR_L_INT_PIN     2
+#define MOTOR_L_DTBY_PIN    2
+#define MOTOR_R_PWM_PIN     6
+#define MOTOR_R_DIR1_PIN    7
+#define MOTOR_R_DIR2_PIN    7
+#define MOTOR_R_INT_PIN     3
+#define MOTOR_R_DTBY_PIN    2
+#define MOTOR_SPEED_UDR     2
+
+
+
 class PID {
     public:
         PID(){};

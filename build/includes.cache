@@ -11,18 +11,13 @@
   },
   {
     "Sourcefile": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\AutomatedBalancedCar.ino.cpp",
-    "Include": "SparkFun_BMI270_Arduino_Library.h",
-    "Includepath": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\SparkFun_BMI270_Arduino_Library\\src"
+    "Include": "TimerInterrupt_Generic.h",
+    "Includepath": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\TimerInterrupt_Generic\\src"
   },
   {
     "Sourcefile": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\AutomatedBalancedCar.ino.cpp",
     "Include": "Wire.h",
     "Includepath": "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\libraries\\Wire"
-  },
-  {
-    "Sourcefile": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\AutomatedBalancedCar.ino.cpp",
-    "Include": "SPI.h",
-    "Includepath": "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\libraries\\SPI"
   },
   {
     "Sourcefile": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\AutomatedBalancedCar.ino.cpp",
@@ -60,57 +55,52 @@
     "Includepath": null
   },
   {
-    "Sourcefile": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\myI2CSensor.cpp",
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi2.c",
     "Include": "",
     "Includepath": null
   },
   {
-    "Sourcefile": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\myMessage.cpp",
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270.c",
     "Include": "",
     "Includepath": null
   },
   {
-    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\SparkFun_BMI270_Arduino_Library\\src\\SparkFun_BMI270_Arduino_Library.cpp",
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270_context.c",
     "Include": "",
     "Includepath": null
   },
   {
-    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\SparkFun_BMI270_Arduino_Library\\src\\bmi270_api\\bmi2.c",
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270_legacy.c",
     "Include": "",
     "Includepath": null
   },
   {
-    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\SparkFun_BMI270_Arduino_Library\\src\\bmi270_api\\bmi270.c",
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270_maximum_fifo.c",
     "Include": "",
     "Includepath": null
   },
   {
-    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\SparkFun_BMI270_Arduino_Library\\src\\bmi270_api\\bmi270_context.c",
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi2_ois.c",
     "Include": "",
     "Includepath": null
   },
   {
-    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\SparkFun_BMI270_Arduino_Library\\src\\bmi270_api\\bmi270_legacy.c",
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMM150-Sensor-API\\bmm150.c",
     "Include": "",
     "Includepath": null
   },
   {
-    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\SparkFun_BMI270_Arduino_Library\\src\\bmi270_api\\bmi270_maximum_fifo.c",
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\myI2CSensor.cpp",
     "Include": "",
     "Includepath": null
   },
   {
-    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\SparkFun_BMI270_Arduino_Library\\src\\bmi270_api\\bmi2_ois.c",
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\myMessage.cpp",
     "Include": "",
     "Includepath": null
   },
   {
     "Sourcefile": "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\libraries\\Wire\\Wire.cpp",
-    "Include": "",
-    "Includepath": null
-  },
-  {
-    "Sourcefile": "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\libraries\\SPI\\SPI.cpp",
     "Include": "",
     "Includepath": null
   }
