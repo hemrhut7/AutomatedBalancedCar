@@ -91,8 +91,8 @@ void setup()
 
     // Initialize variables
     t0 = micros();
-    imu_time.ulong_val = micros() - t0;
-    pre_time = micros() - t0;
+    imu_time.ulong_val = (micros() - t0) * 0.9891;
+    pre_time = (micros() - t0) * 0.9891;
     sys_state = IMU_MEASURING;
     Serial.println("Start measuring...");
 }
@@ -152,6 +152,10 @@ void INS(uint8_t* buffer) {
         memcpy(buffer + 54, bar.bin_val, 4);
         myCRC.calCRC(buffer, 62);
         Serial.write(buffer, 62);
+    }
+    else{
+        Serial.print("dt = ");
+        Serial.println(dt, 4);
     }
 }
 

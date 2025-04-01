@@ -66,10 +66,10 @@
    "-iprefixC:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\cores\\arduino",
    "@C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\variants\\ARDUINO_NANO33BLE/includes.txt",
    "-o",
-   "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270.c.o",
-   "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270.c"
+   "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi2.c.o",
+   "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi2.c"
   ],
-  "file": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270.c"
+  "file": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi2.c"
  },
  {
   "directory": "c:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar",
@@ -102,10 +102,10 @@
    "-iprefixC:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\cores\\arduino",
    "@C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\variants\\ARDUINO_NANO33BLE/includes.txt",
    "-o",
-   "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi2.c.o",
-   "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi2.c"
+   "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270.c.o",
+   "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270.c"
   ],
-  "file": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi2.c"
+  "file": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270.c"
  },
  {
   "directory": "c:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar",
@@ -174,10 +174,10 @@
    "-iprefixC:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\cores\\arduino",
    "@C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\variants\\ARDUINO_NANO33BLE/includes.txt",
    "-o",
-   "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270_context.c.o",
-   "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270_context.c"
+   "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270_maximum_fifo.c.o",
+   "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270_maximum_fifo.c"
   ],
-  "file": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270_context.c"
+  "file": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270_maximum_fifo.c"
  },
  {
   "directory": "c:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar",
@@ -210,10 +210,10 @@
    "-iprefixC:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\cores\\arduino",
    "@C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\variants\\ARDUINO_NANO33BLE/includes.txt",
    "-o",
-   "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270_maximum_fifo.c.o",
-   "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270_maximum_fifo.c"
+   "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270_context.c.o",
+   "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270_context.c"
   ],
-  "file": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270_maximum_fifo.c"
+  "file": "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\build\\sketch\\src\\sensor\\BMI270-Sensor-API\\bmi270_context.c"
  },
  {
   "directory": "c:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar",

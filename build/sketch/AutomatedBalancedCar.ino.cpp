@@ -37,9 +37,9 @@ NRF52_MBED_Timer ITimer(NRF_TIMER_1);
 void setup();
 #line 99 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
 void loop();
-#line 157 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
+#line 161 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
 void gestureSensing();
-#line 289 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
+#line 293 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
 void ISR_gesture();
 #line 34 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
 void setup()
@@ -101,8 +101,8 @@ void setup()
 
     // Initialize variables
     t0 = micros();
-    imu_time.ulong_val = micros() - t0;
-    pre_time = micros() - t0;
+    imu_time.ulong_val = (micros() - t0) * TIME_SCALE;
+    pre_time = (micros() - t0) * TIME_SCALE;
     sys_state = IMU_MEASURING;
     Serial.println("Start measuring...");
 }
@@ -162,6 +162,10 @@ void INS(uint8_t* buffer) {
         memcpy(buffer + 54, bar.bin_val, 4);
         myCRC.calCRC(buffer, 62);
         Serial.write(buffer, 62);
+    }
+    else{
+        Serial.print("dt = ");
+        Serial.println(dt, 4);
     }
 }
 
@@ -278,7 +282,7 @@ void blinkLED() {
             lastBlinkTime = current_time;
         }
         break;
-    }    
+    }
 }
 
 // void ISR_MotorLeft() {
