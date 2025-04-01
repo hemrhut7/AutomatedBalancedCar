@@ -109,12 +109,12 @@ void loop()
         gestureSensing();
     }
     
-    if (motor_ready){
-        motor_ready = false;
-        Serial.println("motor ready");
+    // if (motor_ready){
+    //     motor_ready = false;
+        // Serial.println("motor ready");
         // motorLeft.updateSpeed(MOTOR_SPEED_UDR);
         // motorRight.updateSpeed(MOTOR_SPEED_UDR);
-    }
+    // }
 
     // PLL
     // float mean_vel = (motorLeft.getSpeed() + motorRight.getSpeed()) / 2; 
@@ -150,33 +150,85 @@ void INS(uint8_t* buffer) {
         memcpy(buffer + 42, ori.bin_val, 12);
         memcpy(buffer + 54, bar.bin_val, 4);
         myCRC.calCRC(buffer, 62);
-        // Serial.write(buffer, 62);
+        Serial.write(buffer, 62);
     }
 }
 
 void gestureSensing(){
-        if (gesture.gestureAvailable()){
+    static int num_color = 0;
+    if (gesture.gestureAvailable()){
         int gs = gesture.readGesture();
         switch (gs) {
-        case GESTURE_UP:
-            Serial.println("Detected UP gesture");
-            break;
+            case GESTURE_UP:
+                num_color++;
+                if (abs(num_color) % 3 == 0){
+                    digitalWrite(LEDB, LOW);
+                }else if (abs(num_color) % 3 == 1){
+                    digitalWrite(LEDG, LOW);
+                }else{
+                    digitalWrite(LEDR, LOW);
+                }
+                break;
+    
+            case GESTURE_DOWN:
+                num_color--;
+                if (abs(num_color) % 3 == 0){
+                    digitalWrite(LEDB, LOW);
+                }else if (abs(num_color) % 3 == 1){
+                    digitalWrite(LEDG, LOW);
+                }else{
+                    digitalWrite(LEDR, LOW);
+                }
+                break;
+    
+            case GESTURE_LEFT:
+                num_color--;
+                if (abs(num_color) % 4 == 0){
+                    digitalWrite(LEDR, LOW);
+                    digitalWrite(LEDG, HIGH);
+                    digitalWrite(LEDB, HIGH);
+                }else if (abs(num_color) % 3 == 1){
+                    digitalWrite(LEDG, LOW);
+                    digitalWrite(LEDR, HIGH);
+                    digitalWrite(LEDB, HIGH);
+                }else if (abs(num_color) % 3 == 2){
+                    digitalWrite(LEDB, LOW);
+                    digitalWrite(LEDR, HIGH);
+                    digitalWrite(LEDG, HIGH);
+                }else{
+                    digitalWrite(LEDB, HIGH);
+                    digitalWrite(LEDR, HIGH);
+                    digitalWrite(LEDG, HIGH);
+                }
+                break;
+    
+            case GESTURE_RIGHT:
+                num_color++;
+                if (abs(num_color) % 4 == 0){
+                    digitalWrite(LEDR, LOW);
+                    digitalWrite(LEDG, HIGH);
+                    digitalWrite(LEDB, HIGH);
+                }else if (abs(num_color) % 3 == 1){
+                    digitalWrite(LEDG, LOW);
+                    digitalWrite(LEDR, HIGH);
+                    digitalWrite(LEDB, HIGH);
+                }else if (abs(num_color) % 3 == 2){
+                    digitalWrite(LEDB, LOW);
+                    digitalWrite(LEDR, HIGH);
+                    digitalWrite(LEDG, HIGH);
+                }else{
+                    digitalWrite(LEDB, HIGH);
+                    digitalWrite(LEDR, HIGH);
+                    digitalWrite(LEDG, HIGH);
+                }
 
-        case GESTURE_DOWN:
-            Serial.println("Detected DOWN gesture");
-            break;
-
-        case GESTURE_LEFT:
-            Serial.println("Detected LEFT gesture");
-            break;
-
-        case GESTURE_RIGHT:
-            Serial.println("Detected RIGHT gesture");
-            break;
-
-        default:
-            break;
+                break;
+    
+            default:
+                break;
         }
+        
+        
     }
 }
 
@@ -215,7 +267,7 @@ void blinkLED() {
             lastBlinkTime = current_time;
         }
         break;
-    }    
+    }
 }
 
 // void ISR_MotorLeft() {
