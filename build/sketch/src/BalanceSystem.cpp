@@ -117,15 +117,15 @@ void MotorPID::setPID(float kp, float ki, float kd) {
     pid.setTunings(kp, ki, kd);
 }
 
-void MotorPID::update(float target) {   
-    driveMotor(pid.compute(target, speed));
+void MotorPID::setTargetSpeed(float target_speed) {   
+    driveMotor(pid.compute(target_speed, speed));
 }
 
-void MotorPID::updateSpeed(float hz) {
-    noInterrupts();
+void MotorPID::updateCurrentSpeed(float hz) {
+    // noInterrupts();
     speed = encoderCount * hz;
     encoderCount = 0;
-    interrupts();
+    // interrupts();
 }
 
 void MotorPID::driveMotor(float output) {
@@ -134,12 +134,12 @@ void MotorPID::driveMotor(float output) {
     if(pwmVal > 255) pwmVal = 255;
     
     if(output >= 0) {
-        digitalWrite(dirPin1, 1);
-        digitalWrite(dirPin2, 0);
+        digitalWrite(dirPin1, HIGH);
+        digitalWrite(dirPin2, LOW);
         analogWrite(pwmPin, pwmVal);
     } else {
-        digitalWrite(dirPin1, 0);
-        digitalWrite(dirPin2, 1);
+        digitalWrite(dirPin1, LOW);
+        digitalWrite(dirPin2, HIGH);
         analogWrite(pwmPin, pwmVal);
     }
 }

@@ -76,11 +76,14 @@ float PID::compute(unsigned long now, float target, float current, float derivat
 }
 
 
-MotorPID::MotorPID(int pwmPin, int dirPin1, int dirPin2, int MotorPID): pwmPin(pwmPin), dirPin1(dirPin1), dirPin2(dirPin2), STBY(STBY) {
+MotorPID::MotorPID(int pwmPin, int dirPin1, int dirPin2, int MotorPID, int ENCODER_PIN, int DIR_PIN): pwmPin(pwmPin), dirPin1(dirPin1), dirPin2(dirPin2), STBY(STBY), ENCODER_PIN(ENCODER_PIN), DIR_PIN(DIR_PIN) {
     pinMode(pwmPin, OUTPUT);
     pinMode(dirPin1, OUTPUT);
     pinMode(dirPin2, OUTPUT);
     pinMode(STBY, OUTPUT);
+
+    pinMode(DIR_PIN, INPUT);
+    pinMode(ENCODER_PIN, INPUT);
 
     //控制电机A的方向，(dirPin1, dirPin1)=(1, 0)为正转，(dirPin1, dirPin1)=(0, 1)为反转
     digitalWrite(dirPin1, 1);
@@ -92,8 +95,8 @@ MotorPID::MotorPID(int pwmPin, int dirPin1, int dirPin2, int MotorPID): pwmPin(p
 MotorPID::~MotorPID(){}
 
 void MotorPID::encoderISR() {
-    int pwm = digitalRead(pwmPin);
-    int dir = digitalRead(dir);
+    int pwm = digitalRead(ENCODER_PIN);
+    int dir = digitalRead(DIR_PIN);
     if (pwm == LOW) {
         if (dir == LOW){
             encoderCount--;
@@ -116,11 +119,11 @@ void MotorPID::setPID(float kp, float ki, float kd) {
     pid.setTunings(kp, ki, kd);
 }
 
-void MotorPID::update(float target) {   
-    driveMotor(pid.compute(target, speed));
+void MotorPID::setTargetSpeed(float target_speed) {   
+    driveMotor(pid.compute(target_speed, speed));
 }
 
-void MotorPID::updateSpeed(float hz) {
+void MotorPID::updateCurrentSpeed(float hz) {
     noInterrupts();
     speed = encoderCount * hz;
     encoderCount = 0;
@@ -133,12 +136,12 @@ void MotorPID::driveMotor(float output) {
     if(pwmVal > 255) pwmVal = 255;
     
     if(output >= 0) {
-        digitalWrite(dirPin1, 1);
-        digitalWrite(dirPin2, 0);
+        digitalWrite(dirPin1, HIGH);
+        digitalWrite(dirPin2, LOW);
         analogWrite(pwmPin, pwmVal);
     } else {
-        digitalWrite(dirPin1, 0);
-        digitalWrite(dirPin2, 1);
+        digitalWrite(dirPin1, LOW);
+        digitalWrite(dirPin2, HIGH);
         analogWrite(pwmPin, pwmVal);
     }
 }

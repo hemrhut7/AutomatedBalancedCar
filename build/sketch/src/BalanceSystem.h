@@ -6,17 +6,17 @@
 #include <deque>
 
 
-#define MOTOR_L_PWM_PIN     5
-#define MOTOR_L_DIR1_PIN    4
-#define MOTOR_L_DIR2_PIN    4
-#define MOTOR_L_INT_PIN     2
-#define MOTOR_L_DTBY_PIN    2
-#define MOTOR_R_PWM_PIN     6
-#define MOTOR_R_DIR1_PIN    7
-#define MOTOR_R_DIR2_PIN    7
-#define MOTOR_R_INT_PIN     3
-#define MOTOR_R_DTBY_PIN    2
-#define MOTOR_SPEED_UDR     2
+#define MOTOR_L_PWM_PIN     D12
+#define MOTOR_L_DIR1_PIN    D10
+#define MOTOR_L_DIR2_PIN    D11
+#define MOTOR_L_INT_PIN     D8
+#define MOTOR_L_DTBY_PIN    D9
+#define MOTOR_R_PWM_PIN     D7
+#define MOTOR_R_DIR1_PIN    D7
+#define MOTOR_R_DIR2_PIN    D7
+#define MOTOR_R_INT_PIN     D7
+#define MOTOR_R_DTBY_PIN    D7
+#define MOTOR_SPEED_UDR     D7
 
 
 
@@ -47,9 +47,10 @@ class MotorPID {
 
         void encoderISR();
         void setPID(float kp, float ki, float kd);
-        void update(float target);
+        void setTargetSpeed(float target_speed);
         float getSpeed(){return speed;};
-        void updateSpeed(float hz);
+        void updateCurrentSpeed(float hz);
+        void driveMotor(float output);
 
     private:
         PID pid;
@@ -59,8 +60,6 @@ class MotorPID {
         int STBY;
         float speed = 0;
         volatile float encoderCount = 0;
-        
-        void driveMotor(float output);
 };
 
 

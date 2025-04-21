@@ -16,7 +16,6 @@ void ISR_motor_timer();
 // void ISR_MotorLeft();
 // void ISR_MotorRight();
 
-const unsigned char HEADER[2] = {0xFA, 0xFF};
 unsigned long t0, pre_time;
 my_data_3f omg, acc, ori, mag, new_omg, new_acc;
 my_data_u4 imu_time, temp, bar;
@@ -27,7 +26,7 @@ Navigation::ComplementaryFilter my_cpf;
 SYSTEM_STATE sys_state = INITIALIZING;
 
 // BalanceSystem my_balance_system;
-// MotorPID motorLeft(MOTOR_L_PWM_PIN, MOTOR_L_DIR1_PIN, MOTOR_L_DIR2_PIN, MOTOR_L_DTBY_PIN);
+MotorPID motorLeft(D12, D10, D11, D9);
 // MotorPID motorRight(MOTOR_R_PWM_PIN, MOTOR_R_DIR1_PIN, MOTOR_R_DIR2_PIN, MOTOR_R_DTBY_PIN);
 NRF52_MBED_Timer ITimer(NRF_TIMER_1);
 
@@ -62,14 +61,7 @@ void setup()
     Serial.println("Connect to BARO");
 
     // Initialize Gesture Sensor
-    if (!gesture.begin()){
-        Serial.println("Failed to initialize Gesture Sensor!");
-        while (1) {blinkLED();}
-    }
-    Serial.println("Connect to Gesture Sensor");
-    gesture.gestureAvailable();
-    attachInterrupt(digitalPinToInterrupt(gesture.getInterrputPin()), ISR_gesture, FALLING);
-
+# 73 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
     // Initialize CPF Parameters
     my_cpf.setIMUError(Nano33, 100);
     my_cpf.setThresholdBySTD();
@@ -84,7 +76,7 @@ void setup()
     // // Initialize Motor
     // attachInterrupt(digitalPinToInterrupt(MOTOR_L_INT_PIN), ISR_MotorLeft, CHANGE);
     // attachInterrupt(digitalPinToInterrupt(MOTOR_R_INT_PIN), ISR_MotorRight, CHANGE);
-    if (!ITimer.attachInterruptInterval(1e6 / 2, ISR_motor_timer)){
+    if (!ITimer.attachInterruptInterval(1e6 / D7, ISR_motor_timer)){
           Serial.println("Can't set ITimer. Select another freq. or timer");
           while (1) {blinkLED();}
     }
@@ -99,22 +91,19 @@ void setup()
 
 void loop()
 {
+    // motorLeft.driveMotor(255);
+
     uint8_t buffer[62]; // 根據需要的總長度來分配buffer
     if (imu_ready && sys_state == IMU_MEASURING) {
         imu_ready = false;
         INS(buffer);
     }
-
-    if (gesture_ready){
-        gesture_ready = false;
-        gestureSensing();
-    }
-
+# 117 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
     // if (motor_ready){
     //     motor_ready = false;
         // Serial.println("motor ready");
-        // motorLeft.updateSpeed(MOTOR_SPEED_UDR);
-        // motorRight.updateSpeed(MOTOR_SPEED_UDR);
+        // motorLeft.updateCurrentSpeed(MOTOR_SPEED_UDR);
+        // motorRight.updateCurrentSpeed(MOTOR_SPEED_UDR);
     // }
 
     // PLL
@@ -143,7 +132,7 @@ void INS(uint8_t* buffer) {
         my_cpf.getCaliACC(acc.float_val, new_acc.float_val);
 
         // transport data by byte
-        memcpy(buffer, HEADER, 2);
+        memcpy(buffer, expected_header, 2);
         memcpy(buffer + 2, imu_time.bin_val, 4);
         memcpy(buffer + 6, omg.bin_val, 12);
         memcpy(buffer + 18, acc.bin_val, 12);
@@ -159,83 +148,6 @@ void INS(uint8_t* buffer) {
     }
 }
 
-void gestureSensing(){
-    static int num_color = 0;
-    if (gesture.gestureAvailable()){
-        int gs = gesture.readGesture();
-        switch (gs) {
-            case GESTURE_UP:
-                num_color++;
-                if (abs(num_color) % 3 == 0){
-                    digitalWrite(LEDB, LOW);
-                }else if (abs(num_color) % 3 == 1){
-                    digitalWrite(LEDG, LOW);
-                }else{
-                    digitalWrite(LEDR, LOW);
-                }
-                break;
-
-            case GESTURE_DOWN:
-                num_color--;
-                if (abs(num_color) % 3 == 0){
-                    digitalWrite(LEDB, LOW);
-                }else if (abs(num_color) % 3 == 1){
-                    digitalWrite(LEDG, LOW);
-                }else{
-                    digitalWrite(LEDR, LOW);
-                }
-                break;
-
-            case GESTURE_LEFT:
-                num_color--;
-                if (abs(num_color) % 4 == 0){
-                    digitalWrite(LEDR, LOW);
-                    digitalWrite(LEDG, HIGH);
-                    digitalWrite(LEDB, HIGH);
-                }else if (abs(num_color) % 3 == 1){
-                    digitalWrite(LEDG, LOW);
-                    digitalWrite(LEDR, HIGH);
-                    digitalWrite(LEDB, HIGH);
-                }else if (abs(num_color) % 3 == 2){
-                    digitalWrite(LEDB, LOW);
-                    digitalWrite(LEDR, HIGH);
-                    digitalWrite(LEDG, HIGH);
-                }else{
-                    digitalWrite(LEDB, HIGH);
-                    digitalWrite(LEDR, HIGH);
-                    digitalWrite(LEDG, HIGH);
-                }
-                break;
-
-            case GESTURE_RIGHT:
-                num_color++;
-                if (abs(num_color) % 4 == 0){
-                    digitalWrite(LEDR, LOW);
-                    digitalWrite(LEDG, HIGH);
-                    digitalWrite(LEDB, HIGH);
-                }else if (abs(num_color) % 3 == 1){
-                    digitalWrite(LEDG, LOW);
-                    digitalWrite(LEDR, HIGH);
-                    digitalWrite(LEDB, HIGH);
-                }else if (abs(num_color) % 3 == 2){
-                    digitalWrite(LEDB, LOW);
-                    digitalWrite(LEDR, HIGH);
-                    digitalWrite(LEDG, HIGH);
-                }else{
-                    digitalWrite(LEDB, HIGH);
-                    digitalWrite(LEDR, HIGH);
-                    digitalWrite(LEDG, HIGH);
-                }
-
-                break;
-
-            default:
-                break;
-        }
-
-
-    }
-}
 
 void blinkLED() {
     unsigned long current_time = micros();
@@ -289,8 +201,4 @@ void ISR_readIMU(){
 
 void ISR_motor_timer() {
     motor_ready = true;
-}
-
-void ISR_gesture(){
-    gesture_ready = true;
 }

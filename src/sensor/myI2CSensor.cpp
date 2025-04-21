@@ -959,13 +959,20 @@ int APDS9960::readProximity() {
 
 
 // sensor
-#if defined(ARDUINO_ARDUINO_NANO33BLE)
-BoschSensorClass sensor(Wire1);
-LPS22HBClass baro(Wire1);
-APDS9960 gesture(Wire1, PIN_INT_APDS);
+#ifdef ARDUINO_ARDUINO_NANO33BLE
+  BoschSensorClass sensor(Wire1);
+  LPS22HBClass baro(Wire1);
+
+  #ifdef ENABLE_GUESTURE_SENSOR
+    APDS9960 gesture(Wire1, PIN_INT_APDS);
+  #endif
 
 #else
-BoschSensorClass sensor(Wire);
-LPS22HBClass baro(Wire);
-APDS9960 gesture(Wire, -1);
+  BoschSensorClass sensor(Wire);
+  LPS22HBClass baro(Wire);
+
+  #ifdef ENABLE_GUESTURE_SENSOR
+    APDS9960 gesture(Wire, -1);
+  #endif
+
 #endif

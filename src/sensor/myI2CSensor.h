@@ -7,6 +7,7 @@
 #include "BMM150-Sensor-API/bmm150.h"
 #include "myMessage.h"
 
+// #define ENABLE_GUESTURE_SENSOR
 #define INT16_to_G   (8192.0f)                   // 2^16 / (2 * 4) = 8192
 #define INT16_to_DPS   (16.384f * (2000/500))   // 2^16 / (2 * 2000) = 16.384
 #define GRAVITY 9.7895f
@@ -237,6 +238,10 @@ class APDS9960 {
 // sensor
 extern BoschSensorClass sensor;
 extern LPS22HBClass baro;
+
+#ifdef ENABLE_GUESTURE_SENSOR
 extern APDS9960 gesture;
+#endif
+
 #endif
 

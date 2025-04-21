@@ -10,14 +10,14 @@
             ],
             "intelliSenseMode": "gcc-x64",
             "includePath": [
-                "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\cores\\arduino",
-                "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\variants\\ARDUINO_NANO33BLE",
+                "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.4\\cores\\arduino",
+                "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.4\\variants\\ARDUINO_NANO33BLE",
                 "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\TimerInterrupt_Generic\\src",
-                "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\libraries\\Wire",
+                "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.4\\libraries\\Wire",
                 "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\Eigen",
                 "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\ArxTypeTraits",
-                "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\cores\\arduino\\api\\deprecated",
-                "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\cores\\arduino\\api\\deprecated-avr-comp",
+                "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.4\\cores\\arduino\\api\\deprecated",
+                "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.4\\cores\\arduino\\api\\deprecated-avr-comp",
                 "c:\\users\\hemrh\\appdata\\local\\arduino15\\packages\\arduino\\tools\\arm-none-eabi-gcc\\7-2017q4\\arm-none-eabi\\include\\c++\\7.2.1",
                 "c:\\users\\hemrh\\appdata\\local\\arduino15\\packages\\arduino\\tools\\arm-none-eabi-gcc\\7-2017q4\\arm-none-eabi\\include\\c++\\7.2.1\\arm-none-eabi",
                 "c:\\users\\hemrh\\appdata\\local\\arduino15\\packages\\arduino\\tools\\arm-none-eabi-gcc\\7-2017q4\\arm-none-eabi\\include\\c++\\7.2.1\\backward",
@@ -26,7 +26,7 @@
                 "c:\\users\\hemrh\\appdata\\local\\arduino15\\packages\\arduino\\tools\\arm-none-eabi-gcc\\7-2017q4\\arm-none-eabi\\include"
             ],
             "forcedInclude": [
-                "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.1\\cores\\arduino\\Arduino.h"
+                "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\mbed_nano\\4.2.4\\cores\\arduino\\Arduino.h"
             ],
             "cStandard": "c11",
             "cppStandard": "c++11",

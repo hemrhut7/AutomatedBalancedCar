@@ -12,10 +12,9 @@ void blinkLED();
 void INS(uint8_t* buffer);
 void ISR_readIMU();
 void ISR_motor_timer();
-// void ISR_MotorLeft();
-// void ISR_MotorRight();
+void ISR_MotorLeft();
+void ISR_MotorRight();
 
-const unsigned char HEADER[2] = {0xFA, 0xFF};
 unsigned long t0, pre_time;
 my_data_3f omg, acc, ori, mag, new_omg, new_acc;
 my_data_u4 imu_time, temp, bar;
@@ -24,10 +23,11 @@ volatile bool imu_ready = false, motor_ready = false, gesture_ready = false;
 MyCRC myCRC; 
 Navigation::ComplementaryFilter my_cpf;
 SYSTEM_STATE sys_state = INITIALIZING;
+const int UPDATE_RATE_VEL = 10;
 
 // BalanceSystem my_balance_system;
-// MotorPID motorLeft(MOTOR_L_PWM_PIN, MOTOR_L_DIR1_PIN, MOTOR_L_DIR2_PIN, MOTOR_L_DTBY_PIN);
-// MotorPID motorRight(MOTOR_R_PWM_PIN, MOTOR_R_DIR1_PIN, MOTOR_R_DIR2_PIN, MOTOR_R_DTBY_PIN);
+MotorPID motorLeft(MOTOR_L_PWM_PIN, MOTOR_L_DIR1_PIN, MOTOR_L_DIR2_PIN, MOTOR_L_DTBY_PIN, MOTOR_L_ENC_PIN, MOTOR_L_DIR_PIN);
+MotorPID motorRight(MOTOR_R_PWM_PIN, MOTOR_R_DIR1_PIN, MOTOR_R_DIR2_PIN, MOTOR_R_DTBY_PIN, MOTOR_R_ENC_PIN, MOTOR_R_DIR_PIN);
 NRF52_MBED_Timer ITimer(NRF_TIMER_1);
 
 
@@ -61,13 +61,15 @@ void setup()
     Serial.println("Connect to BARO");
 
     // Initialize Gesture Sensor
+    #ifdef ENABLE_GUESTURE_SENSOR
     if (!gesture.begin()){
         Serial.println("Failed to initialize Gesture Sensor!");
         while (1) {blinkLED();}
-    }
+    }    
     Serial.println("Connect to Gesture Sensor");
     gesture.gestureAvailable();
     attachInterrupt(digitalPinToInterrupt(gesture.getInterrputPin()), ISR_gesture, FALLING);
+    #endif
 
     // Initialize CPF Parameters
     my_cpf.setIMUError(Nano33, 100);
@@ -81,9 +83,9 @@ void setup()
     Serial.println("Initialize CPF");
 
     // // Initialize Motor
-    // attachInterrupt(digitalPinToInterrupt(MOTOR_L_INT_PIN), ISR_MotorLeft, CHANGE);
-    // attachInterrupt(digitalPinToInterrupt(MOTOR_R_INT_PIN), ISR_MotorRight, CHANGE);
-    if (!ITimer.attachInterruptInterval(1e6 / MOTOR_SPEED_UDR, ISR_motor_timer)){
+    attachInterrupt(digitalPinToInterrupt(MOTOR_L_DIR_PIN), ISR_MotorLeft, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(MOTOR_R_DIR_PIN), ISR_MotorRight, CHANGE);
+    if (!ITimer.attachInterruptInterval(1e6 / UPDATE_RATE_VEL, ISR_motor_timer)){
           Serial.println("Can't set ITimer. Select another freq. or timer");
           while (1) {blinkLED();}
     }
@@ -98,23 +100,29 @@ void setup()
 
 void loop()
 {
+    // motorLeft.driveMotor(255);
+
     uint8_t buffer[62];  // 根據需要的總長度來分配buffer
     if (imu_ready && sys_state == IMU_MEASURING) {    
         imu_ready = false;
         INS(buffer);
     }
 
+    #ifdef ENABLE_GUESTURE_SENSOR
     if (gesture_ready){
         gesture_ready = false;
         gestureSensing();
     }
+    #endif
     
-    // if (motor_ready){
-    //     motor_ready = false;
-        // Serial.println("motor ready");
-        // motorLeft.updateSpeed(MOTOR_SPEED_UDR);
-        // motorRight.updateSpeed(MOTOR_SPEED_UDR);
-    // }
+    if (motor_ready){
+        motor_ready = false;
+        motorLeft.updateCurrentSpeed(UPDATE_RATE_VEL);
+        motorRight.updateCurrentSpeed(UPDATE_RATE_VEL);
+        Serial.print(motorLeft.getSpeed());
+        Serial.print("\t");
+        Serial.println(motorRight.getSpeed());
+    }
 
     // PLL
     // float mean_vel = (motorLeft.getSpeed() + motorRight.getSpeed()) / 2; 
@@ -142,7 +150,7 @@ void INS(uint8_t* buffer) {
         my_cpf.getCaliACC(acc.float_val, new_acc.float_val);
         
         // transport data by byte
-        memcpy(buffer, HEADER, 2);
+        memcpy(buffer, expected_header, 2);
         memcpy(buffer + 2, imu_time.bin_val, 4);
         memcpy(buffer + 6, omg.bin_val, 12);
         memcpy(buffer + 18, acc.bin_val, 12);
@@ -150,7 +158,7 @@ void INS(uint8_t* buffer) {
         memcpy(buffer + 42, ori.bin_val, 12);
         memcpy(buffer + 54, bar.bin_val, 4);
         myCRC.calCRC(buffer, 62);
-        Serial.write(buffer, 62);
+        // Serial.write(buffer, 62);
     }
     else{
         Serial.print("dt = ");
@@ -158,6 +166,62 @@ void INS(uint8_t* buffer) {
     }
 }
 
+
+void blinkLED() {
+    unsigned long current_time = micros();
+    static unsigned long lastBlinkTime = 0;
+    static bool ledState = false;
+
+    switch (sys_state)
+    {
+    case INITIALIZING:
+        if (current_time - lastBlinkTime >= 100000) { // Blink every 0.5 second
+            ledState = !ledState;
+            digitalWrite(LED_BUILTIN, ledState);
+            lastBlinkTime = current_time;
+        }
+        break;
+    case IMU_MEASURING:
+        if (current_time - lastBlinkTime >= 1000000) { // Blink every second
+            ledState = !ledState;
+            digitalWrite(LED_BUILTIN, ledState);
+            lastBlinkTime = current_time;
+        }
+        break;
+    case CONFIGURING:
+        if (current_time - lastBlinkTime >= 10000000) { // Blink every second
+            ledState = true;
+            digitalWrite(LED_BUILTIN, ledState);
+            lastBlinkTime = current_time;
+        }
+        break;
+    default:
+        if (current_time - lastBlinkTime >= 10000000) { // Blink every second
+            ledState = false;
+            digitalWrite(LED_BUILTIN, ledState);
+            lastBlinkTime = current_time;
+        }
+        break;
+    }
+}
+
+void ISR_MotorLeft() {
+    motorLeft.encoderISR();
+}
+  
+void ISR_MotorRight() {
+    motorRight.encoderISR();
+}
+
+void ISR_readIMU(){
+    imu_ready = true;
+}
+
+void ISR_motor_timer() {   
+    motor_ready = true;
+}
+
+#ifdef ENABLE_GUESTURE_SENSOR
 void gestureSensing(){
     static int num_color = 0;
     if (gesture.gestureAvailable()){
@@ -231,65 +295,10 @@ void gestureSensing(){
             default:
                 break;
         }
-        
-        
     }
-}
-
-void blinkLED() {
-    unsigned long current_time = micros();
-    static unsigned long lastBlinkTime = 0;
-    static bool ledState = false;
-
-    switch (sys_state)
-    {
-    case INITIALIZING:
-        if (current_time - lastBlinkTime >= 100000) { // Blink every 0.5 second
-            ledState = !ledState;
-            digitalWrite(LED_BUILTIN, ledState);
-            lastBlinkTime = current_time;
-        }
-        break;
-    case IMU_MEASURING:
-        if (current_time - lastBlinkTime >= 1000000) { // Blink every second
-            ledState = !ledState;
-            digitalWrite(LED_BUILTIN, ledState);
-            lastBlinkTime = current_time;
-        }
-        break;
-    case CONFIGURING:
-        if (current_time - lastBlinkTime >= 10000000) { // Blink every second
-            ledState = true;
-            digitalWrite(LED_BUILTIN, ledState);
-            lastBlinkTime = current_time;
-        }
-        break;
-    default:
-        if (current_time - lastBlinkTime >= 10000000) { // Blink every second
-            ledState = false;
-            digitalWrite(LED_BUILTIN, ledState);
-            lastBlinkTime = current_time;
-        }
-        break;
-    }
-}
-
-// void ISR_MotorLeft() {
-//     motorLeft.encoderISR();
-// }
-  
-// void ISR_MotorRight() {
-//     motorRight.encoderISR();
-// }
-
-void ISR_readIMU(){
-    imu_ready = true;
-}
-
-void ISR_motor_timer() {   
-    motor_ready = true;
 }
 
 void ISR_gesture(){
     gesture_ready = true;
 }
+#endif
