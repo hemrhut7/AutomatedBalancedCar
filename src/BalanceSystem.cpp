@@ -123,11 +123,13 @@ void MotorPID::setTargetSpeed(float target_speed) {
     driveMotor(pid.compute(target_speed, speed));
 }
 
-void MotorPID::updateCurrentSpeed(float hz) {
-    noInterrupts();
-    speed = encoderCount * hz;
+void MotorPID::updateCurrentSpeed() {
+    uint32_t current_time = millis();
+    if (pre_time != 0) {
+        speed = encoderCount / 30000 * 360 / (current_time - pre_time) * 1000.0; // 30000
+    }
     encoderCount = 0;
-    interrupts();
+    pre_time = current_time;
 }
 
 void MotorPID::driveMotor(float output) {

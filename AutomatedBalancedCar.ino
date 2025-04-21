@@ -29,7 +29,7 @@ const int UPDATE_RATE_VEL = 10;
 MotorPID motorLeft(MOTOR_L_PWM_PIN, MOTOR_L_DIR1_PIN, MOTOR_L_DIR2_PIN, MOTOR_L_DTBY_PIN, MOTOR_L_ENC_PIN, MOTOR_L_DIR_PIN);
 MotorPID motorRight(MOTOR_R_PWM_PIN, MOTOR_R_DIR1_PIN, MOTOR_R_DIR2_PIN, MOTOR_R_DTBY_PIN, MOTOR_R_ENC_PIN, MOTOR_R_DIR_PIN);
 NRF52_MBED_Timer ITimer(NRF_TIMER_1);
-
+float ang = 0;
 
 void setup()
 {   
@@ -117,8 +117,8 @@ void loop()
     
     if (motor_ready){
         motor_ready = false;
-        motorLeft.updateCurrentSpeed(UPDATE_RATE_VEL);
-        motorRight.updateCurrentSpeed(UPDATE_RATE_VEL);
+        motorLeft.updateCurrentSpeed();
+        motorRight.updateCurrentSpeed();
         Serial.print(motorLeft.getSpeed());
         Serial.print("\t");
         Serial.println(motorRight.getSpeed());

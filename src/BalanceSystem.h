@@ -50,7 +50,7 @@ class MotorPID {
         void setPID(float kp, float ki, float kd);
         void setTargetSpeed(float target_speed);
         float getSpeed(){return speed;};
-        void updateCurrentSpeed(float hz);
+        void updateCurrentSpeed();
         void driveMotor(float output);
 
     private:
@@ -62,6 +62,7 @@ class MotorPID {
         int DIR_PIN;
         int ENCODER_PIN;
         float speed = 0;
+        uint32_t pre_time = 0;
         volatile float encoderCount = 0;
 };
 
