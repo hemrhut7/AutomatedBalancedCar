@@ -1,309 +1,250 @@
-#include <Arduino.h>
 #line 1 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
-#include "TimerInterrupt_Generic.h"
-#include "src/sensor/myI2CSensor.h"
-#include "src/Navigation/MyNavigation.h"
-#include "src/BalanceSystem.h"
+#include <BalanceSystem.h>
+#include <Arduino.h>
+#include "SensorReader.h"
+#include "BluetoothSerial.h"
 
 
-#define IS_OUTPUT_BIN true
-#define TIME_SCALE 0.9891
+enum {
+  WHEEL,
+  BYTE,
+  MSG,
+  IMU,
+  TIME,
+  NONE
+};
+
+BalanceSystem my_bs;
+Nano33Sensor sensor(Serial2);
+MotorPID motorL(MOTOR_L_PWM_PIN, MOTOR_L_DIR1_PIN, MOTOR_L_DIR2_PIN, MOTOR_L_DTBY_PIN, MOTOR_L_E1A_PIN, MOTOR_L_E1B_PIN);
+MotorPID motorR(MOTOR_R_PWM_PIN, MOTOR_R_DIR1_PIN, MOTOR_R_DIR2_PIN, MOTOR_R_DTBY_PIN, MOTOR_R_E2A_PIN, MOTOR_R_E2B_PIN);
+// 藍芽Serial initialization
+BluetoothSerial SerialBT;
+
+unsigned long last_time = 0;      // 上次計算時間
+const unsigned long interval = 50; // 計算間隔 (ms)
+
+float target_speed = 0;
+float target_speed2 = 0.1;
+uint8_t read_type = MSG;
+
+float pitch = 0, wx = 0, wz = 0, vel = 0;
+bool enable_PID = false;
 
 
-void blinkLED();
-void INS(uint8_t* buffer);
-void ISR_readIMU();
-void ISR_motor_timer();
-// void ISR_MotorLeft();
-// void ISR_MotorRight();
-
-unsigned long t0, pre_time;
-my_data_3f omg, acc, ori, mag, new_omg, new_acc;
-my_data_u4 imu_time, temp, bar;
-volatile bool imu_ready = false, motor_ready = false, gesture_ready = false;
-
-MyCRC myCRC; 
-Navigation::ComplementaryFilter my_cpf;
-SYSTEM_STATE sys_state = INITIALIZING;
-
-// BalanceSystem my_balance_system;
-MotorPID motorLeft(MOTOR_L_PWM_PIN, MOTOR_L_DIR1_PIN, MOTOR_L_DIR2_PIN, MOTOR_L_DTBY_PIN);
-// MotorPID motorRight(MOTOR_R_PWM_PIN, MOTOR_R_DIR1_PIN, MOTOR_R_DIR2_PIN, MOTOR_R_DTBY_PIN);
-NRF52_MBED_Timer ITimer(NRF_TIMER_1);
-
-
-#line 33 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
+// 編碼器1中斷處理函數
+#line 45 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
 void setup();
-#line 100 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
+#line 62 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
 void loop();
-#line 33 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
-void setup()
-{   
-    // Initialize LED pin as output
-    pinMode(LED_BUILTIN, OUTPUT);
-    pinMode(LEDR, OUTPUT);
-    pinMode(LEDG, OUTPUT);
-    pinMode(LEDB, OUTPUT);
-    digitalWrite(LEDR, HIGH);
-    digitalWrite(LEDG, HIGH);
-    digitalWrite(LEDB, HIGH);
-
-	Serial.begin(115200);
-    while(!Serial) {blinkLED();}
-
-    // Initialize IMU
-    if (!sensor.begin()){
-        Serial.println("Failed to initialize IMU!");
-        while (1) {blinkLED();}
-    }
-    sensor.onInterrupt(ISR_readIMU);
-    Serial.println("Connect to IMU");
-
-    // Initialize BARO
-    if (!baro.begin()){
-        Serial.println("Failed to initialize BARO!");
-        while (1) {blinkLED();}
-    }
-    Serial.println("Connect to BARO");
-
-    // Initialize Gesture Sensor
-    #ifdef ENABLE_GUESTURE_SENSOR
-    if (!gesture.begin()){
-        Serial.println("Failed to initialize Gesture Sensor!");
-        while (1) {blinkLED();}
-    }    
-    Serial.println("Connect to Gesture Sensor");
-    gesture.gestureAvailable();
-    attachInterrupt(digitalPinToInterrupt(gesture.getInterrputPin()), ISR_gesture, FALLING);
-    #endif
-
-    // Initialize CPF Parameters
-    my_cpf.setIMUError(Nano33, 100);
-    my_cpf.setThresholdBySTD();
-    my_cpf.setWindowSizeLC(100);
-    my_cpf.setLevelingConstant(2);
-    my_cpf.startLC();
-    my_cpf.setEnableLC_Output(true);
-    float pos[3] = {25.013332647853254, 121.22195612772002, 0};
-    my_cpf.setPOS(pos);
-    Serial.println("Initialize CPF");
-
-    // // Initialize Motor
-    // attachInterrupt(digitalPinToInterrupt(MOTOR_L_INT_PIN), ISR_MotorLeft, CHANGE);
-    // attachInterrupt(digitalPinToInterrupt(MOTOR_R_INT_PIN), ISR_MotorRight, CHANGE);
-    if (!ITimer.attachInterruptInterval(1e6 / MOTOR_SPEED_UDR, ISR_motor_timer)){
-          Serial.println("Can't set ITimer. Select another freq. or timer");
-          while (1) {blinkLED();}
-    }
-
-    // Initialize variables
-    t0 = micros();
-    imu_time.ulong_val = (micros() - t0) * TIME_SCALE;
-    pre_time = (micros() - t0) * TIME_SCALE;
-    sys_state = IMU_MEASURING;
-    Serial.println("Start measuring...");
+#line 196 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
+void checkPIDSettings(String command);
+#line 35 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
+void IRAM_ATTR handleEncoder1() {
+  motorL.encoderISR();
 }
 
-void loop()
-{
-    // motorLeft.driveMotor(255);
-
-    uint8_t buffer[62];  // 根據需要的總長度來分配buffer
-    if (imu_ready && sys_state == IMU_MEASURING) {    
-        imu_ready = false;
-        INS(buffer);
-    }
-
-    #ifdef ENABLE_GUESTURE_SENSOR
-    if (gesture_ready){
-        gesture_ready = false;
-        gestureSensing();
-    }
-    #endif
-    
-    // if (motor_ready){
-    //     motor_ready = false;
-        // Serial.println("motor ready");
-        // motorLeft.updateCurrentSpeed(MOTOR_SPEED_UDR);
-        // motorRight.updateCurrentSpeed(MOTOR_SPEED_UDR);
-    // }
-
-    // PLL
-    // float mean_vel = (motorLeft.getSpeed() + motorRight.getSpeed()) / 2; 
-    // my_balance_system.updateState(mean_vel, ori.float_val[0], new_omg.float_val);
-    // motorLeft.update(my_balance_system.getOutputLeft());
-    // motorRight.update(my_balance_system.getOutputRight());
-    
-    blinkLED();
-}
-
-void INS(uint8_t* buffer) {
-    //  calculate time
-    imu_time.ulong_val = (micros() - t0) * TIME_SCALE;
-    unsigned long dt = imu_time.ulong_val - pre_time;
-    if (dt > 0) {
-        pre_time = imu_time.ulong_val;
-        sensor.getIMUData(omg.float_val, acc.float_val);
-        sensor.getMAGData(mag.float_val);
-        baro.getBARData(bar.float_val);
-
-        // calculate attitude
-        my_cpf.run(imu_time.ulong_val * 1e-6, omg.float_val, acc.float_val);  
-        my_cpf.getEularAngle(ori.float_val);
-        my_cpf.getCaliRate(omg.float_val, new_omg.float_val);
-        my_cpf.getCaliACC(acc.float_val, new_acc.float_val);
-        
-        // transport data by byte
-        memcpy(buffer, expected_header, 2);
-        memcpy(buffer + 2, imu_time.bin_val, 4);
-        memcpy(buffer + 6, omg.bin_val, 12);
-        memcpy(buffer + 18, acc.bin_val, 12);
-        memcpy(buffer + 30, mag.bin_val, 12);
-        memcpy(buffer + 42, ori.bin_val, 12);
-        memcpy(buffer + 54, bar.bin_val, 4);
-        myCRC.calCRC(buffer, 62);
-        Serial.write(buffer, 62);
-    }
-    else{
-        Serial.print("dt = ");
-        Serial.println(dt, 4);
-    }
+// 編碼器2中斷處理函數
+void IRAM_ATTR handleEncoder2() {
+  motorR.encoderISR();
 }
 
 
-void blinkLED() {
-    unsigned long current_time = micros();
-    static unsigned long lastBlinkTime = 0;
-    static bool ledState = false;
+void setup() {
+  // 初始化串口
+  Serial.begin(115200);
+  Serial2.begin(115200, SERIAL_8N1, 16, 17);
+  SerialBT.begin("ABC_BT"); // Bluetooth 裝置名稱
 
-    switch (sys_state)
-    {
-    case INITIALIZING:
-        if (current_time - lastBlinkTime >= 100000) { // Blink every 0.5 second
-            ledState = !ledState;
-            digitalWrite(LED_BUILTIN, ledState);
-            lastBlinkTime = current_time;
-        }
-        break;
-    case IMU_MEASURING:
-        if (current_time - lastBlinkTime >= 1000000) { // Blink every second
-            ledState = !ledState;
-            digitalWrite(LED_BUILTIN, ledState);
-            lastBlinkTime = current_time;
-        }
-        break;
-    case CONFIGURING:
-        if (current_time - lastBlinkTime >= 10000000) { // Blink every second
-            ledState = true;
-            digitalWrite(LED_BUILTIN, ledState);
-            lastBlinkTime = current_time;
-        }
-        break;
-    default:
-        if (current_time - lastBlinkTime >= 10000000) { // Blink every second
-            ledState = false;
-            digitalWrite(LED_BUILTIN, ledState);
-            lastBlinkTime = current_time;
-        }
-        break;
-    }
-}
-
-// void ISR_MotorLeft() {
-//     motorLeft.encoderISR();
-// }
+  // 初始化電機
+  motorR.setDirection(-1);
+  pinMode(MOTOR_R_DTBY_PIN, OUTPUT);
+  digitalWrite(MOTOR_R_DTBY_PIN, HIGH); // 啟動電機
+  attachInterrupt(digitalPinToInterrupt(MOTOR_L_E1A_PIN), handleEncoder1, RISING);
+  attachInterrupt(digitalPinToInterrupt(MOTOR_R_E2A_PIN), handleEncoder2, RISING);
   
-// void ISR_MotorRight() {
-//     motorRight.encoderISR();
-// }
-
-void ISR_readIMU(){
-    imu_ready = true;
+  // 初始化計時
+  last_time = millis();
 }
 
-void ISR_motor_timer() {   
-    motor_ready = true;
-}
+void loop() {
+  unsigned long current_time = millis();
+  if (Serial2.available()){
+    sensor.readData(); 
+    if (sensor.isNewData()){
+      motorL.updateCurrentSpeed();
+      motorR.updateCurrentSpeed();
+      vel = (motorL.getSpeed() + motorR.getSpeed()) / 2;
 
-#ifdef ENABLE_GUESTURE_SENSOR
-void gestureSensing(){
-    static int num_color = 0;
-    if (gesture.gestureAvailable()){
-        int gs = gesture.readGesture();
-        switch (gs) {
-            case GESTURE_UP:
-                num_color++;
-                if (abs(num_color) % 3 == 0){
-                    digitalWrite(LEDB, LOW);
-                }else if (abs(num_color) % 3 == 1){
-                    digitalWrite(LEDG, LOW);
-                }else{
-                    digitalWrite(LEDR, LOW);
-                }
-                break;
-    
-            case GESTURE_DOWN:
-                num_color--;
-                if (abs(num_color) % 3 == 0){
-                    digitalWrite(LEDB, LOW);
-                }else if (abs(num_color) % 3 == 1){
-                    digitalWrite(LEDG, LOW);
-                }else{
-                    digitalWrite(LEDR, LOW);
-                }
-                break;
-    
-            case GESTURE_LEFT:
-                num_color--;
-                if (abs(num_color) % 4 == 0){
-                    digitalWrite(LEDR, LOW);
-                    digitalWrite(LEDG, HIGH);
-                    digitalWrite(LEDB, HIGH);
-                }else if (abs(num_color) % 3 == 1){
-                    digitalWrite(LEDG, LOW);
-                    digitalWrite(LEDR, HIGH);
-                    digitalWrite(LEDB, HIGH);
-                }else if (abs(num_color) % 3 == 2){
-                    digitalWrite(LEDB, LOW);
-                    digitalWrite(LEDR, HIGH);
-                    digitalWrite(LEDG, HIGH);
-                }else{
-                    digitalWrite(LEDB, HIGH);
-                    digitalWrite(LEDR, HIGH);
-                    digitalWrite(LEDG, HIGH);
-                }
-                break;
-    
-            case GESTURE_RIGHT:
-                num_color++;
-                if (abs(num_color) % 4 == 0){
-                    digitalWrite(LEDR, LOW);
-                    digitalWrite(LEDG, HIGH);
-                    digitalWrite(LEDB, HIGH);
-                }else if (abs(num_color) % 3 == 1){
-                    digitalWrite(LEDG, LOW);
-                    digitalWrite(LEDR, HIGH);
-                    digitalWrite(LEDB, HIGH);
-                }else if (abs(num_color) % 3 == 2){
-                    digitalWrite(LEDB, LOW);
-                    digitalWrite(LEDR, HIGH);
-                    digitalWrite(LEDG, HIGH);
-                }else{
-                    digitalWrite(LEDB, HIGH);
-                    digitalWrite(LEDR, HIGH);
-                    digitalWrite(LEDG, HIGH);
-                }
+      my_data_3f omg = sensor.getcali_gyro();
+      pitch = sensor.getEuler().float_val[0];
+      wx = 0.2*omg.float_val[0]+0.8*wx;
+      wz = omg.float_val[2];
 
-                break;
-    
-            default:
-                break;
+      if (enable_PID) {
+        my_bs.updateState(current_time, vel, pitch, omg.float_val[0], omg.float_val[2]);
+        float output_L = my_bs.getOutputLeft();
+        float output_R = my_bs.getOutputRight();
+
+        motorL.setTargetSpeed(output_L);
+        motorR.setTargetSpeed(output_R);
+        
+        if (read_type == TIME) {
+          Serial.println((current_time - last_time) / 1000.0);
+          last_time = current_time;
         }
+      }
     }
+  }
+
+  if (Serial.available()) {
+    String command = Serial.readStringUntil('\n');
+    command.trim();
+    if (command == "0") {
+      digitalWrite(MOTOR_R_DTBY_PIN, LOW); // 停止電機
+      motorL.pwm = 0;
+      motorR.pwm = 0;
+      motorL.setTargetSpeed(0);
+      motorR.setTargetSpeed(0);
+      my_bs.reset();
+      enable_PID = false;
+    } 
+    else if (command == "1") {
+      digitalWrite(MOTOR_R_DTBY_PIN, HIGH); 
+      enable_PID = true;
+    }
+    else if (command == "+")    {      target_speed += 0.01;          } 
+    else if (command == "-")    {      target_speed -= 0.01;          } 
+    else if (command == "++")   {      target_speed += 0.05;           } 
+    else if (command == "--")   {      target_speed -= 0.05;           } 
+    else if (command == "a")    {      target_speed = 0;              } 
+    else if (command == "b")    {      target_speed = target_speed2;  } 
+
+    else if (command == "byte")   { read_type = BYTE;   } 
+    else if (command == "msg")    { read_type = MSG;    } 
+    else if (command == "wheel")  { read_type = WHEEL;  } 
+    else if (command == "imu1")   { Serial2.print('1'); } 
+    else if (command == "imu0")   { Serial2.print('2'); } 
+    else if (command == "imu")    { read_type = IMU;    } 
+    else if (command == "none")   { read_type = NONE;   }
+    else if (command == "time")   {read_type = TIME;    }
+
+    else if (command.startsWith("PID_")) {
+      checkPIDSettings(command);
+    }
+  }
+
+  if (SerialBT.available()) {
+    String command = SerialBT.readStringUntil('\n');
+    SerialBT.print("Received: ");
+    SerialBT.println(command);
+    if (command == "0") {
+      digitalWrite(MOTOR_R_DTBY_PIN, LOW); // 停止電機
+      motorL.pwm = 0;
+      motorR.pwm = 0;
+      motorL.setTargetSpeed(0);
+      motorR.setTargetSpeed(0);
+      my_bs.reset();
+      enable_PID = false;
+    } 
+    else if (command == "1") {
+      digitalWrite(MOTOR_R_DTBY_PIN, HIGH); 
+      enable_PID = true;
+    }
+    else if (command.startsWith("PID_")) { checkPIDSettings(command); }
+  }
+
+  // print current state every 100ms
+  if (current_time - last_time >= interval) {
+    if (read_type == WHEEL){
+      Serial.print(target_speed);
+      Serial.print("\t");
+      Serial.print(motorL.getSpeed(), 4);
+      Serial.print("\t");
+      Serial.print(motorR.getSpeed(), 4);
+      Serial.print("\t");
+      Serial.print(motorL.pwm, 0);
+      Serial.print("\t");
+      Serial.println(motorR.pwm, 0);
+    } 
+    
+    else if (read_type == IMU){
+        my_data_3f euler = sensor.getEuler();
+        Serial.print(sensor.getTime());
+        Serial.print("\t");
+        Serial.print(euler.float_val[0]);
+        Serial.print("\t");
+        Serial.print(euler.float_val[1]);
+        Serial.print("\t");
+        Serial.println(euler.float_val[2]);
+    }
+
+    else if (read_type == MSG){
+      Serial.print(pitch);
+      Serial.print("\t");
+      Serial.print(wx);
+      Serial.print("\t");
+      Serial.print(wz);
+      Serial.print("\t");
+      Serial.print(vel);
+      Serial.print("\t");
+      Serial.print(my_bs.getOutputLeft());
+      Serial.print("\t");
+      Serial.println(my_bs.getOutputRight());
+    }
+
+    // chagne target speed here
+    // motorL.setTargetSpeed(target_speed);
+    // motorR.setTargetSpeed(target_speed);
+
+    last_time = current_time;
+  }  
 }
 
-void ISR_gesture(){
-    gesture_ready = true;
-}
-#endif
+void checkPIDSettings(String command) {
+  String data = command.substring(4);
+  
+  if (data.length() < 2 || data[1] != '_') {
+    Serial.println("Error: Invalid PID format (expected PID_A_XX.XXX_YY.YYY_ZZ.ZZZ)");
+    return;
+  }
 
+  char pidType = data[0]; // 獲取 PID 類型 (A 或 R)
+  String pidValues = data.substring(2); // 獲取 XX.XXX_YY.YYY_ZZ.ZZZ
+  float values[3]; // 儲存三個浮點數
+  int valueIndex = 0;
+  char *ptr = strtok((char *)pidValues.c_str(), "_"); // 以 _ 分割
+
+  while (ptr != nullptr && valueIndex < 3) {
+    values[valueIndex] = atof(ptr); // 轉換為浮點數
+    valueIndex++;
+    ptr = strtok(nullptr, "_");
+  }
+
+  // 驗證是否成功解析三個浮點數
+  if (valueIndex == 3) {
+    if (pidType == 'A') {
+      my_bs.setAnglePID(values[0], values[1], values[2]);
+    }
+    else if (pidType == 'R') {
+      my_bs.setRatePID(values[0], values[1], values[2]);
+    } 
+    else if (pidType == 'M') {
+      motorL.setPID(values[0], values[1], values[2]);
+      motorR.setPID(values[0], values[1], values[2]);
+    } 
+    else if (pidType == 'S') {
+      my_bs.setSpeedPID(values[0], values[1], values[2]);
+    } 
+    else if (pidType == 'T0') {
+      my_bs.setTurnPID(values[0], values[1], values[2]);
+    } 
+    else {
+      Serial.println("Error: Invalid PID type (expected A or R)");
+      return;
+    }
+    
+  } else {
+    Serial.println("Error: Invalid PID data");
+  }
+}

@@ -2,6 +2,7 @@
 {
     "sketch": "AutomatedBalancedCar.ino",
     "output": "build",
-    "board": "arduino:mbed_nano:nano33ble",
-    "port": "COM3"
+    "board": "esp32:esp32:nodemcu-32s",
+    "port": "COM3",
+    "configuration": "FlashFreq=80,UploadSpeed=115200,DebugLevel=none,EraseFlash=none"
 }
