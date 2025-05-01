@@ -1,8 +1,8 @@
 #include <BalanceSystem.h>
 #include <Arduino.h>
 #include "SensorReader.h"
-#include "BluetoothSerial.h"
-
+// #include "BluetoothSerial.h"
+#include <driver/pcnt.h>
 
 enum {
   WHEEL,
@@ -18,74 +18,102 @@ Nano33Sensor sensor(Serial2);
 MotorPID motorL(MOTOR_L_PWM_PIN, MOTOR_L_DIR1_PIN, MOTOR_L_DIR2_PIN, MOTOR_L_DTBY_PIN, MOTOR_L_E1A_PIN, MOTOR_L_E1B_PIN);
 MotorPID motorR(MOTOR_R_PWM_PIN, MOTOR_R_DIR1_PIN, MOTOR_R_DIR2_PIN, MOTOR_R_DTBY_PIN, MOTOR_R_E2A_PIN, MOTOR_R_E2B_PIN);
 // 藍芽Serial initialization
-BluetoothSerial SerialBT;
+// BluetoothSerial SerialBT;
 
 unsigned long last_time = 0;      // 上次計算時間
-const unsigned long interval = 50; // 計算間隔 (ms)
+const unsigned long interval = 50; // 列印間隔 (ms)
 
 float target_speed = 0;
-float target_speed2 = 0.1;
+float target_speed2 = 3;
 uint8_t read_type = MSG;
 
 float pitch = 0, wx = 0, wz = 0, vel = 0;
 bool enable_PID = false;
 
 
-// 編碼器1中斷處理函數
-void IRAM_ATTR handleEncoder1() {
-  motorL.encoderISR();
-}
+void setupPCNT() {
+    // 配置左電機 (Unit 0)
+    pcnt_config_t pcnt_config_l = {
+        .pulse_gpio_num = MOTOR_L_E1A_PIN, // A 相
+        .ctrl_gpio_num = MOTOR_L_E1B_PIN,  // B 相
+        .lctrl_mode = PCNT_MODE_REVERSE,   // B 相低電平反轉計數（減）
+        .hctrl_mode = PCNT_MODE_KEEP,      // B 相高電平保持計數（增）
+        .pos_mode = PCNT_COUNT_INC,        // A 相上升沿增計數
+        .neg_mode = PCNT_COUNT_DIS,        // A 相下降沿禁用
+        .counter_h_lim = 32767,
+        .counter_l_lim = -32768,
+        .unit = PCNT_UNIT_0,
+        .channel = PCNT_CHANNEL_0
+    };
+    pcnt_unit_config(&pcnt_config_l);
+    pcnt_set_filter_value(PCNT_UNIT_0, 10); // 濾波 10 個 APB 週期 (~125ns @ 80MHz)
+    pcnt_filter_enable(PCNT_UNIT_0);
+    pcnt_counter_clear(PCNT_UNIT_0);
 
-// 編碼器2中斷處理函數
-void IRAM_ATTR handleEncoder2() {
-  motorR.encoderISR();
+    // 配置右電機 (Unit 1)
+    pcnt_config_t pcnt_config_r = {
+        .pulse_gpio_num = MOTOR_R_E2A_PIN,
+        .ctrl_gpio_num = MOTOR_R_E2B_PIN,
+        .lctrl_mode = PCNT_MODE_REVERSE,
+        .hctrl_mode = PCNT_MODE_KEEP,
+        .pos_mode = PCNT_COUNT_INC,
+        .neg_mode = PCNT_COUNT_DIS,
+        .counter_h_lim = 32767,
+        .counter_l_lim = -32768,
+        .unit = PCNT_UNIT_1,
+        .channel = PCNT_CHANNEL_0
+    };
+    pcnt_unit_config(&pcnt_config_r);
+    pcnt_set_filter_value(PCNT_UNIT_1, 10);
+    pcnt_filter_enable(PCNT_UNIT_1);
+    pcnt_counter_clear(PCNT_UNIT_1);
 }
-
+  
+  // 讀取 PCNT 計數
+int32_t getPCNTCount(pcnt_unit_t unit) {
+    int16_t count;
+    pcnt_get_counter_value(unit, &count);
+    pcnt_counter_clear(unit); // 讀取後清零
+    return (int32_t)count;
+}
 
 void setup() {
   // 初始化串口
   Serial.begin(115200);
-  Serial2.begin(115200, SERIAL_8N1, 16, 17);
-  SerialBT.begin("ABC_BT"); // Bluetooth 裝置名稱
+  Serial2.begin(230400, SERIAL_8N1, 16, 17);
+//   SerialBT.begin("ABC_BT"); // Bluetooth 裝置名稱
 
   // 初始化電機
   motorR.setDirection(-1);
   pinMode(MOTOR_R_DTBY_PIN, OUTPUT);
   digitalWrite(MOTOR_R_DTBY_PIN, HIGH); // 啟動電機
-  attachInterrupt(digitalPinToInterrupt(MOTOR_L_E1A_PIN), handleEncoder1, RISING);
-  attachInterrupt(digitalPinToInterrupt(MOTOR_R_E2A_PIN), handleEncoder2, RISING);
-  
-  // 初始化計時
+  setupPCNT();
   last_time = millis();
 }
 
 void loop() {
   unsigned long current_time = millis();
   if (Serial2.available()){
-    sensor.readData(); 
-    if (sensor.isNewData()){
-      motorL.updateCurrentSpeed();
-      motorR.updateCurrentSpeed();
-      vel = (motorL.getSpeed() + motorR.getSpeed()) / 2;
+    if (sensor.readData()){
+        motorL.updateCurrentSpeed(getPCNTCount(PCNT_UNIT_0));
+        motorR.updateCurrentSpeed(getPCNTCount(PCNT_UNIT_1));
+        vel = (motorL.getSpeed() + motorR.getSpeed()) / 2;
 
-      my_data_3f omg = sensor.getcali_gyro();
-      pitch = sensor.getEuler().float_val[0];
-      wx = 0.2*omg.float_val[0]+0.8*wx;
-      wz = omg.float_val[2];
+        my_data_3f omg = sensor.getcali_gyro();
+        pitch = sensor.getEuler().float_val[0];
+        wx = 0.2*omg.float_val[0]+0.8*wx;
+        wz = omg.float_val[2];
 
-      if (enable_PID) {
-        my_bs.updateState(current_time, vel, pitch, omg.float_val[0], omg.float_val[2]);
-        float output_L = my_bs.getOutputLeft();
-        float output_R = my_bs.getOutputRight();
-
-        motorL.setTargetSpeed(output_L);
-        motorR.setTargetSpeed(output_R);
-        
-        if (read_type == TIME) {
-          Serial.println((current_time - last_time) / 1000.0);
-          last_time = current_time;
+        if (enable_PID) {
+            my_bs.updateState(current_time, vel, pitch, wx, wz);
+            motorL.setTargetSpeed(my_bs.outputLeft);
+            motorR.setTargetSpeed(my_bs.outputRight);
         }
-      }
+
+        if (read_type == TIME) {
+            Serial.println((current_time - last_time) / 1000.0);
+            last_time = current_time;
+        }
     }
   }
 
@@ -96,8 +124,7 @@ void loop() {
       digitalWrite(MOTOR_R_DTBY_PIN, LOW); // 停止電機
       motorL.pwm = 0;
       motorR.pwm = 0;
-      motorL.setTargetSpeed(0);
-      motorR.setTargetSpeed(0);
+      target_speed = 0; 
       my_bs.reset();
       enable_PID = false;
     } 
@@ -105,12 +132,12 @@ void loop() {
       digitalWrite(MOTOR_R_DTBY_PIN, HIGH); 
       enable_PID = true;
     }
-    else if (command == "+")    {      target_speed += 0.01;          } 
-    else if (command == "-")    {      target_speed -= 0.01;          } 
-    else if (command == "++")   {      target_speed += 0.05;           } 
-    else if (command == "--")   {      target_speed -= 0.05;           } 
-    else if (command == "a")    {      target_speed = 0;              } 
-    else if (command == "b")    {      target_speed = target_speed2;  } 
+    else if (command == "+")    {      target_speed += 3;  } 
+    else if (command == "-")    {      target_speed -= 3;  } 
+    else if (command == "++")   {      target_speed += 10; } 
+    else if (command == "--")   {      target_speed -= 10; } 
+    else if (command == "a")    {      target_speed = 0;   } 
+    else if (command == "b")    {      target_speed = 10;  } 
 
     else if (command == "byte")   { read_type = BYTE;   } 
     else if (command == "msg")    { read_type = MSG;    } 
@@ -124,36 +151,40 @@ void loop() {
     else if (command.startsWith("PID_")) {
       checkPIDSettings(command);
     }
+
+    // chagne target speed here
+    // motorL.setTargetSpeed(target_speed);
+    // motorR.setTargetSpeed(target_speed);
   }
 
-  if (SerialBT.available()) {
-    String command = SerialBT.readStringUntil('\n');
-    SerialBT.print("Received: ");
-    SerialBT.println(command);
-    if (command == "0") {
-      digitalWrite(MOTOR_R_DTBY_PIN, LOW); // 停止電機
-      motorL.pwm = 0;
-      motorR.pwm = 0;
-      motorL.setTargetSpeed(0);
-      motorR.setTargetSpeed(0);
-      my_bs.reset();
-      enable_PID = false;
-    } 
-    else if (command == "1") {
-      digitalWrite(MOTOR_R_DTBY_PIN, HIGH); 
-      enable_PID = true;
-    }
-    else if (command.startsWith("PID_")) { checkPIDSettings(command); }
-  }
+//   if (SerialBT.available()) {
+//     String command = SerialBT.readStringUntil('\n');
+//     SerialBT.print("Received: ");
+//     SerialBT.println(command);
+//     if (command == "0") {
+//       digitalWrite(MOTOR_R_DTBY_PIN, LOW); // 停止電機
+//       motorL.pwm = 0;
+//       motorR.pwm = 0;
+//       motorL.setTargetSpeed(0);
+//       motorR.setTargetSpeed(0);
+//       my_bs.reset();
+//       enable_PID = false;
+//     } 
+//     else if (command == "1") {
+//       digitalWrite(MOTOR_R_DTBY_PIN, HIGH); 
+//       enable_PID = true;
+//     }
+//     else if (command.startsWith("PID_")) { checkPIDSettings(command); }
+//   }
 
   // print current state every 100ms
   if (current_time - last_time >= interval) {
     if (read_type == WHEEL){
       Serial.print(target_speed);
       Serial.print("\t");
-      Serial.print(motorL.getSpeed(), 4);
+      Serial.print(motorL.getSpeed());
       Serial.print("\t");
-      Serial.print(motorR.getSpeed(), 4);
+      Serial.print(motorR.getSpeed());
       Serial.print("\t");
       Serial.print(motorL.pwm, 0);
       Serial.print("\t");
@@ -172,22 +203,18 @@ void loop() {
     }
 
     else if (read_type == MSG){
+      Serial.print(my_bs.current_rateX);
+      Serial.print("\t");
+      Serial.print(my_bs.target_rateX);
+      Serial.print("\t");
       Serial.print(pitch);
       Serial.print("\t");
-      Serial.print(wx);
-      Serial.print("\t");
-      Serial.print(wz);
+      Serial.print(my_bs.target_angle);
       Serial.print("\t");
       Serial.print(vel);
       Serial.print("\t");
-      Serial.print(my_bs.getOutputLeft());
-      Serial.print("\t");
-      Serial.println(my_bs.getOutputRight());
+      Serial.println(my_bs.outputLeft);
     }
-
-    // chagne target speed here
-    // motorL.setTargetSpeed(target_speed);
-    // motorR.setTargetSpeed(target_speed);
 
     last_time = current_time;
   }  

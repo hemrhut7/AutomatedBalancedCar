@@ -10,7 +10,7 @@ void Nano33Sensor::printByte() {
     }
 }
 
-void Nano33Sensor::readData(){
+bool Nano33Sensor::readData(){
     static byte bytes_received = 0;
     newData = false;
 
@@ -60,6 +60,8 @@ void Nano33Sensor::readData(){
         default: break;
         }
     }
+
+    return newData;
 }
 
 void Nano33Sensor::parseData() {

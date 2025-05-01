@@ -8,26 +8,13 @@ void PID::setTunings(float kp, float ki, float kd) {
 }
 
 float PID::compute(float target, float current) {
-    unsigned long now = millis();
-    float timeChange = (float)(now - lastTime) / 1000.0;
+    float now = millis();
+    float dt = (float)(now - lastTime) / 1000.0;
     lastTime = now;
 
     float error = target - current;
-    errorWindow.push_back(error * timeChange);
-    if (errorWindow.size() > window_size) {
-        errorWindow.pop_front();
-    }
-
-    float integral = 0;
-    for (float e : errorWindow) {
-        integral += e;
-    }
-
-    float derivative = 0;
-    if (timeChange > 0) {
-        derivative = (error - lastError) / timeChange;
-    }
-
+    integral += error * dt;
+    float derivative = (dt > 0) ? (error - lastError) / dt : 0;
     float output = kp * error + ki * integral + kd * derivative;
     lastError = error;
 
@@ -35,44 +22,19 @@ float PID::compute(float target, float current) {
 }
 
 
-float PID::compute(unsigned long now, float target, float current) {
-    float timeChange = (float)(now - lastTime) / 1000.0;
-    lastTime = now;
-
+float PID::compute(float dt, float target, float current) {
     float error = target - current;
-    errorWindow.push_back(error * timeChange);
-    if (errorWindow.size() > window_size) {
-        errorWindow.pop_front();
-    }
-
-    float integral = 0;
-    for (float e : errorWindow) {
-        integral += e;
-    }
-
-    float derivative = (error - lastError) / timeChange;
-
+    integral += error * dt;
+    float derivative = (dt > 0) ? (error - lastError) / dt : 0;
     float output = kp * error + ki * integral + kd * derivative;
     lastError = error;
 
     return output;
 }
 
-float PID::compute(unsigned long now, float target, float current, float derivative) {
-    float timeChange = (float)(now - lastTime) / 1000.0;
-    lastTime = now;
-
+float PID::compute(float dt, float target, float current, float derivative) {
     float error = target - current;
-    errorWindow.push_back(error * timeChange);
-    if (errorWindow.size() > window_size) {
-        errorWindow.pop_front();
-    }
-
-    float integral = 0;
-    for (float e : errorWindow) {
-        integral += e;
-    }
-
+    integral += error * dt;
     float output = kp * error + ki * integral + kd * derivative;
     lastError = error;
 
@@ -98,11 +60,6 @@ MotorPID::MotorPID(int pwmPin, int dirPin1, int dirPin2, int MotorPID, int EAPin
 
 MotorPID::~MotorPID(){}
 
-void MotorPID::encoderISR() {
-    if (digitalRead(EAPin) == digitalRead(EBPin)) { encoderCount++; }  // 正轉
-    else { encoderCount--; } // 反轉
-}
-
 void MotorPID::setPID(float kp, float ki, float kd) {
     pid.setTunings(kp, ki, kd);
 }
@@ -111,12 +68,13 @@ void MotorPID::setTargetSpeed(float target_speed) {
     this->target_speed = max(min(target_speed, MAX_VEL), -MAX_VEL);
 }
 
-void MotorPID::updateCurrentSpeed() {
-    noInterrupts();
-    speed = encoderCount * COUNTER2LEN * 20.0 * dir_scale;
-    encoderCount = 0;
-    interrupts();
-    
+void MotorPID::updateCurrentSpeed(int32_t count) {
+    unsigned long currentTime = micros();
+    unsigned long dt = currentTime - last_time;
+    if (dt < 10000) return; // 最小間隔 10ms
+    last_time = currentTime;
+
+    speed = count * COUNTER2RAD / dt * 1000000.0 * dir_scale;
     pwm = max(min(pid.compute(target_speed, speed)+pwm, 255.0f), -255.0f);
     driveMotor(pwm);
 }
@@ -152,16 +110,22 @@ void BalanceSystem::setTargetRateZ(float Rate){
 }
 
 void BalanceSystem::updateState(uint32_t time, float vel, float pitch, float wx, float wz){
+    if (current_t > 0){
+        float dt = (float)(time - current_t) / 1000.0;
+        current_speed = vel;
+        current_angle = pitch;
+        current_rateX = wx;
+        current_rateZ = wz;
+
+        // float angle_fix_rate = 1;
+        // if (current_angle < target_angle) { target_angle += angle_fix_rate * dt; }
+        // else { target_angle -= angle_fix_rate * dt; }
+
+        target_rateX = anglePID.compute(dt, target_angle, current_angle, current_rateX);
+        outputLeft += RatePID.compute(dt, target_rateX, current_rateX);
+        outputRight = outputLeft;
+    }
     current_t = time;
-    current_speed = vel;
-    current_angle = pitch;
-    current_rateX = wx;
-    current_rateZ = wz;
-    
-    target_rateX = anglePID.compute(current_t, target_angle, current_angle);
-    output_rateX += RatePID.compute(current_t, target_rateX, current_rateX);
-    outputLeft = output_rateX;
-    outputRight = output_rateX;
 }
 
 void BalanceSystem::setAnglePID(float kp, float ki, float kd){
@@ -187,8 +151,6 @@ void BalanceSystem::reset(){
     current_speed = 0;
     current_rateX = 0;
     current_rateZ = 0;
-
-    output_rateX = 0;
 
     target_angle = 0;
     target_speed = 0;

@@ -26,7 +26,7 @@ const float CPR = PPR * QUADRATURE * GEAR_RATIO; // 每轉計數 (500 * 1 * 30 =
 const float WHEEL_RADIUS = 0.065 / 2; // 輪半徑 (m)
 const float COUNTER2RAD = 1 / CPR * (2 * PI);
 const float COUNTER2LEN = COUNTER2RAD * WHEEL_RADIUS;
-const float MAX_VEL = 0.25;
+const float MAX_VEL = 20;
 
 class PID {
     public:
@@ -36,8 +36,8 @@ class PID {
 
         void setTunings(float kp, float ki, float kd);
         float compute(float target, float current);
-        float compute(unsigned long now, float target, float current);
-        float compute(unsigned long now, float target, float current, float derivative);
+        float compute(float now, float target, float current);
+        float compute(float now, float target, float current, float derivative);
         
 
     private:
@@ -46,6 +46,7 @@ class PID {
         std::deque<float> errorWindow;
         float lastError = 0;
         unsigned long lastTime = 0;
+        float integral = 0;
 };
 
 class MotorPID {
@@ -53,11 +54,10 @@ class MotorPID {
         MotorPID(int pwmPin, int dirPin1, int dirPin2, int STBY, int EAPin, int EBPin);
         ~MotorPID();
 
-        void encoderISR();
         void setPID(float kp, float ki, float kd);
         void setTargetSpeed(float target_speed);
         float getSpeed(){return speed;};
-        void updateCurrentSpeed();
+        void updateCurrentSpeed(int32_t count);
 
         // output is between -255 and 255
         void driveMotor(int target_PWM);
@@ -68,7 +68,7 @@ class MotorPID {
         float pwm = 0;
 
     private:
-        PID pid = PID(250, 30, 12);
+        PID pid = PID(1.5, 0, 0.05);
         int dir_scale = 1;
         int pwmPin;
         int dirPin1;
@@ -78,7 +78,7 @@ class MotorPID {
         int EBPin;
         float speed = 0;
         float target_speed = 0;
-        volatile int32_t encoderCount = 0;
+        uint32_t last_time = 0;
 };
 
 
@@ -86,33 +86,10 @@ class BalanceSystem {
     public:
         BalanceSystem(){};
         ~BalanceSystem(){};
-        
-        void setTargetAngle(float angle);
-        void setTargetSpeed(float speed);
-        void setTargetRateZ(float Rate);
-        void updateState(uint32_t time, float vel, float pitch, float wx, float wz);
-        float getOutputLeft(){return outputLeft;};
-        float getOutputRight(){return outputRight;};
-        void setAnglePID(float kp, float ki, float kd);
-        void setSpeedPID(float kp, float ki, float kd);
-        void setRatePID(float kp, float ki, float kd);
-        void setTurnPID(float kp, float ki, float kd);
-        void reset();
-
-    private:
-        PID RatePID = PID(0.000125, 0, 0.00000);
-        PID anglePID = PID(2.2, 0.000, 0.0);
-        PID speedPID;
-        PID turnPID;
-        float bias_angle = 0;
-
-        unsigned long current_t = 0;
         float current_angle = 0;
         float current_speed = 0;
         float current_rateX = 0;
         float current_rateZ = 0;
-
-        float output_rateX = 0;
 
         float target_angle = 0;
         float target_speed = 0;
@@ -121,6 +98,27 @@ class BalanceSystem {
 
         float outputLeft = 0;
         float outputRight = 0;
+        
+        void setTargetAngle(float angle);
+        void setTargetSpeed(float speed);
+        void setTargetRateZ(float Rate);
+        void updateState(uint32_t time, float vel, float pitch, float wx, float wz);
+        void setAnglePID(float kp, float ki, float kd);
+        void setSpeedPID(float kp, float ki, float kd);
+        void setRatePID(float kp, float ki, float kd);
+        void setTurnPID(float kp, float ki, float kd);
+        void reset();
+
+        
+    private:
+        PID RatePID = PID(0.013, 0, 0.0003);
+        PID anglePID = PID(2.2, 0.000, 0.12);
+        PID speedPID;
+        PID turnPID;
+        float bias_angle = 0;
+
+        unsigned long current_t = 0;
+
 
         void updateMotor();
         void updateAngle();

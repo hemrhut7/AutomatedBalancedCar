@@ -21,7 +21,7 @@ class Nano33Sensor
     public:
         Nano33Sensor(Stream& serial) : port (serial){};
         ~Nano33Sensor();
-        void readData();
+        bool readData();
         void printByte();
         bool isNewData() { return newData; }
         float getTime() { return time.ulong_val * 1e-6; }
