@@ -68,7 +68,7 @@ void Nano33Sensor::parseData() {
     memcpy(&time, &buffer[2], sizeof(my_data_u4));
     memcpy(&gyro, &buffer[6], sizeof(my_data_3f));
     memcpy(&accl, &buffer[18], sizeof(my_data_3f));
-    memcpy(&cali_gyro, &buffer[30], sizeof(my_data_3f));
+    memcpy(&mag, &buffer[30], sizeof(my_data_3f));
     memcpy(&euler, &buffer[42], sizeof(my_data_3f));
     memcpy(&bar, &buffer[54], sizeof(my_data_u4));
     memcpy(&temp, &buffer[58], sizeof(my_data_u4));

@@ -35,10 +35,10 @@ class PID {
         ~PID(){};
 
         void setTunings(float kp, float ki, float kd);
+        void reset() { lastError = 0; integral = 0; lastTime = 0; errorWindow.clear(); }
         float compute(float target, float current);
         float compute(float now, float target, float current);
         float compute(float now, float target, float current, float derivative);
-        
 
     private:
         float kp = 1, ki = 1/200, kd = 0.1;
@@ -58,6 +58,7 @@ class MotorPID {
         void setTargetSpeed(float target_speed);
         float getSpeed(){return speed;};
         void updateCurrentSpeed(int32_t count);
+        void reset();
 
         // output is between -255 and 255
         void driveMotor(int target_PWM);
@@ -111,7 +112,7 @@ class BalanceSystem {
 
         
     private:
-        PID RatePID = PID(0.013, 0, 0.0003);
+        PID RatePID = PID(0.01, 0.0, 0.0005);
         PID anglePID = PID(2.2, 0.000, 0.12);
         PID speedPID;
         PID turnPID;

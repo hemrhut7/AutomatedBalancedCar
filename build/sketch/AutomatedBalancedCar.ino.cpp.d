@@ -158,6 +158,14 @@ C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\AutomatedBalan
  C:\Users\hemrh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\3.2.0\cores\esp32/freertos_stats.h \
  C:\Users\hemrh\Documents\GitHub\AutomatedBalancedCar\build\sketch\SensorReader.h \
  C:\Users\hemrh\Documents\Arduino\libraries\myArduinoSensor/myMessage.h \
+ C:\Users\hemrh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\3.2.0\libraries\BluetoothSerial\src/BluetoothSerial.h \
+ C:\Users\hemrh\AppData\Local\Arduino15\packages\esp32\tools\esp32-arduino-libs\idf-release_v5.4-2f7dcd86-v1\esp32/include/bt/host/bluedroid/api/include/api/esp_gap_bt_api.h \
+ C:\Users\hemrh\AppData\Local\Arduino15\packages\esp32\tools\esp32-arduino-libs\idf-release_v5.4-2f7dcd86-v1\esp32/include/bt/host/bluedroid/api/include/api/esp_bt_defs.h \
+ C:\Users\hemrh\AppData\Local\Arduino15\packages\esp32\tools\esp32-arduino-libs\idf-release_v5.4-2f7dcd86-v1\esp32/include/bt/host/bluedroid/api/include/api/esp_spp_api.h \
+ C:\Users\hemrh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\3.2.0\libraries\BluetoothSerial\src/BTScan.h \
+ C:\Users\hemrh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\3.2.0\cores\esp32/Print.h \
+ C:\Users\hemrh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\3.2.0\libraries\BluetoothSerial\src/BTAddress.h \
+ C:\Users\hemrh\AppData\Local\Arduino15\packages\esp32\hardware\esp32\3.2.0\libraries\BluetoothSerial\src/BTAdvertisedDevice.h \
  C:\Users\hemrh\AppData\Local\Arduino15\packages\esp32\tools\esp32-arduino-libs\idf-release_v5.4-2f7dcd86-v1\esp32/include/driver/deprecated/driver/pcnt.h \
  C:\Users\hemrh\AppData\Local\Arduino15\packages\esp32\tools\esp32-arduino-libs\idf-release_v5.4-2f7dcd86-v1\esp32/include/driver/deprecated/driver/pcnt_types_legacy.h \
  C:\Users\hemrh\AppData\Local\Arduino15\packages\esp32\tools\esp32-arduino-libs\idf-release_v5.4-2f7dcd86-v1\esp32/include/hal/include/hal/pcnt_types.h

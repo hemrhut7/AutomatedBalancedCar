@@ -42,7 +42,7 @@ float PID::compute(float dt, float target, float current, float derivative) {
 }
 
 
-MotorPID::MotorPID(int pwmPin, int dirPin1, int dirPin2, int MotorPID, int EAPin, int EBPin): pwmPin(pwmPin), dirPin1(dirPin1), dirPin2(dirPin2), STBY(STBY), EAPin(EAPin), EBPin(EBPin) {
+MotorPID::MotorPID(int pwmPin, int dirPin1, int dirPin2, int STBY, int EAPin, int EBPin): pwmPin(pwmPin), dirPin1(dirPin1), dirPin2(dirPin2), STBY(STBY), EAPin(EAPin), EBPin(EBPin) {
     pinMode(pwmPin, OUTPUT);
     pinMode(dirPin1, OUTPUT);
     pinMode(dirPin2, OUTPUT);
@@ -51,10 +51,9 @@ MotorPID::MotorPID(int pwmPin, int dirPin1, int dirPin2, int MotorPID, int EAPin
     pinMode(EAPin, INPUT);
     pinMode(EBPin, INPUT);
 
-    //控制电机A的方向，(dirPin1, dirPin1)=(1, 0)为正转，(dirPin1, dirPin1)=(0, 1)为反转
     digitalWrite(dirPin1, HIGH);
     digitalWrite(dirPin2, LOW);
-    digitalWrite(STBY, HIGH);
+    // digitalWrite(STBY, HIGH);
     analogWrite(pwmPin, 0);
 }
 
@@ -69,14 +68,26 @@ void MotorPID::setTargetSpeed(float target_speed) {
 }
 
 void MotorPID::updateCurrentSpeed(int32_t count) {
-    unsigned long currentTime = micros();
-    unsigned long dt = currentTime - last_time;
-    if (dt < 10000) return; // 最小間隔 10ms
-    last_time = currentTime;
+    if (last_time > 0){
+        unsigned long currentTime = micros();
+        unsigned long dt = currentTime - last_time;
+        if (dt < 10000) return; // 最小間隔 10ms
 
-    speed = count * COUNTER2RAD / dt * 1000000.0 * dir_scale;
-    pwm = max(min(pid.compute(target_speed, speed)+pwm, 255.0f), -255.0f);
-    driveMotor(pwm);
+        speed = count * COUNTER2RAD / dt * 1000000.0 * dir_scale;
+        pwm = max(min(pid.compute(target_speed, speed)+pwm, 255.0f), -255.0f);
+        driveMotor(pwm);
+    }
+    
+    last_time = micros();
+}
+
+void MotorPID::reset() {
+    speed = 0;
+    target_speed = 0;
+    pwm = 0;
+    last_time = 0;
+    pid.reset();
+    driveMotor(0);
 }
 
 void MotorPID::driveMotor(int target_PWM) {
@@ -159,6 +170,11 @@ void BalanceSystem::reset(){
 
     outputLeft = 0;
     outputRight = 0;
+    
+    RatePID.reset();
+    anglePID.reset();
+    speedPID.reset();
+    turnPID.reset();
 }
 
 void BalanceSystem::updateAngle(){

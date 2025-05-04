@@ -29,6 +29,11 @@
         "functional": "cpp",
         "tuple": "cpp",
         "cstddef": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "memory": "cpp",
+        "random": "cpp",
+        "format": "cpp",
+        "span": "cpp",
+        "text_encoding": "cpp"
     }
 }

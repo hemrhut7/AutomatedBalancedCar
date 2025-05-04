@@ -2,15 +2,16 @@
 # 2 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino" 2
 # 3 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino" 2
 # 4 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino" 2
-// #include "BluetoothSerial.h"
+# 5 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino" 2
 # 6 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino" 2
+
+// #define ENALBE_BT
 
 enum {
   WHEEL,
   BYTE,
   MSG,
   IMU,
-  TIME,
   NONE
 };
 
@@ -18,11 +19,15 @@ BalanceSystem my_bs;
 Nano33Sensor sensor(Serial2);
 MotorPID motorL(19, 5, 18, 21, 32, 33);
 MotorPID motorR(2, 4, 0, 21, 25, 26);
-// 藍芽Serial initialization
-// BluetoothSerial SerialBT;
 
+
+
+
+
+
+float last_imu_time = 0;
 unsigned long last_time = 0; // 上次計算時間
-const unsigned long interval = 50; // 計算間隔 (ms)
+const unsigned long interval = 50; // 列印間隔 (ms)
 
 float target_speed = 0;
 float target_speed2 = 3;
@@ -30,6 +35,7 @@ uint8_t read_type = MSG;
 
 float pitch = 0, wx = 0, wz = 0, vel = 0;
 bool enable_PID = false;
+int fs = 0;
 
 
 void setupPCNT() {
@@ -82,14 +88,16 @@ void setup() {
   // 初始化串口
   Serial0.begin(115200);
   Serial2.begin(230400, SERIAL_8N1, 16, 17);
-//   SerialBT.begin("ABC_BT"); // Bluetooth 裝置名稱
+
+
+
+
 
   // 初始化電機
   motorR.setDirection(-1);
   pinMode(21, 0x03);
   digitalWrite(21, 0x1); // 啟動電機
   setupPCNT();
-
   last_time = millis();
 }
 
@@ -97,26 +105,21 @@ void loop() {
   unsigned long current_time = millis();
   if (Serial2.available()){
     if (sensor.readData()){
-
-
         motorL.updateCurrentSpeed(getPCNTCount(PCNT_UNIT_0));
         motorR.updateCurrentSpeed(getPCNTCount(PCNT_UNIT_1));
         vel = (motorL.getSpeed() + motorR.getSpeed()) / 2;
 
         my_data_3f omg = sensor.getcali_gyro();
         pitch = sensor.getEuler().float_val[0];
-        wx = 0.05*omg.float_val[0]+0.95*wx;
+        wx = 0.2*omg.float_val[0]+0.8*wx;
         wz = omg.float_val[2];
+        fs = int(1 / (sensor.getTime() - last_imu_time));
+        last_imu_time = sensor.getTime();
 
         if (enable_PID) {
-            my_bs.updateState(current_time, vel, pitch, omg.float_val[0], omg.float_val[2]);
+            my_bs.updateState(current_time, vel, pitch, wx, wz);
             motorL.setTargetSpeed(my_bs.outputLeft);
             motorR.setTargetSpeed(my_bs.outputRight);
-        }
-
-        if (read_type == TIME) {
-            Serial0.println((current_time - last_time) / 1000.0);
-            last_time = current_time;
         }
     }
   }
@@ -129,6 +132,8 @@ void loop() {
       motorL.pwm = 0;
       motorR.pwm = 0;
       target_speed = 0;
+      motorL.driveMotor(0);
+      motorR.driveMotor(0);
       my_bs.reset();
       enable_PID = false;
     }
@@ -150,7 +155,6 @@ void loop() {
     else if (command == "imu0") { Serial2.print('2'); }
     else if (command == "imu") { read_type = IMU; }
     else if (command == "none") { read_type = NONE; }
-    else if (command == "time") {read_type = TIME; }
 
     else if (command.startsWith("PID_")) {
       checkPIDSettings(command);
@@ -160,30 +164,18 @@ void loop() {
     // motorL.setTargetSpeed(target_speed);
     // motorR.setTargetSpeed(target_speed);
   }
-
-//   if (SerialBT.available()) {
-//     String command = SerialBT.readStringUntil('\n');
-//     SerialBT.print("Received: ");
-//     SerialBT.println(command);
-//     if (command == "0") {
-//       digitalWrite(MOTOR_R_DTBY_PIN, LOW); // 停止電機
-//       motorL.pwm = 0;
-//       motorR.pwm = 0;
-//       motorL.setTargetSpeed(0);
-//       motorR.setTargetSpeed(0);
-//       my_bs.reset();
-//       enable_PID = false;
-//     } 
-//     else if (command == "1") {
-//       digitalWrite(MOTOR_R_DTBY_PIN, HIGH); 
-//       enable_PID = true;
-//     }
-//     else if (command.startsWith("PID_")) { checkPIDSettings(command); }
-//   }
-
+# 189 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
   // print current state every 100ms
   if (current_time - last_time >= interval) {
+    // char buffer[256];
+    // int index = 0;
     if (read_type == WHEEL){
+      // index = appendValue2Str(buffer, 256, index, target_speed, 2);
+      // index = appendValue2Str(buffer, 256, index, motorL.getSpeed(), 2);
+      // index = appendValue2Str(buffer, 256, index, motorR.getSpeed(), 2);
+      // index = appendValue2Str(buffer, 256, index, motorL.pwm, 0);
+      // index = appendValue2Str(buffer, 256, index, motorR.pwm, 0);
+
       Serial0.print(target_speed);
       Serial0.print("\t");
       Serial0.print(motorL.getSpeed());
@@ -197,6 +189,12 @@ void loop() {
 
     else if (read_type == IMU){
         my_data_3f euler = sensor.getEuler();
+        // my_data_3f gyro = sensor.getGyro();
+        // index = appendValue2Str(buffer, 256, index, sensor.getTime(), 3);
+        // index = appendValue2Str(buffer, 256, index, gyro.float_val[0], 3);
+        // index = appendValue2Str(buffer, 256, index, gyro.float_val[2], 3);
+        // index = appendValues2Str(buffer, 256, index, euler.float_val, 3, 1);
+
         Serial0.print(sensor.getTime());
         Serial0.print("\t");
         Serial0.print(euler.float_val[0]);
@@ -207,11 +205,19 @@ void loop() {
     }
 
     else if (read_type == MSG){
-        Serial0.print(my_bs.current_rateX);
-        Serial0.print("\t");
-        Serial0.print(my_bs.target_rateX);
-        Serial0.print("\t");
-        Serial0.print(pitch);
+      // index = appendValue2Str(buffer, 256, index, pitch, 1);
+      // index = appendValue2Str(buffer, 256, index, my_bs.target_angle, 1);
+      // index = appendValue2Str(buffer, 256, index, my_bs.current_rateX, 3);
+      // index = appendValue2Str(buffer, 256, index, my_bs.target_rateX, 3);
+      // index = appendValue2Str(buffer, 256, index, vel, 2);
+      // index = appendValue2Str(buffer, 256, index, my_bs.outputLeft, 2);
+      Serial0.print(fs);
+      Serial0.print("\t");
+      Serial0.print(my_bs.current_rateX);
+      Serial0.print("\t");
+      Serial0.print(my_bs.target_rateX);
+      Serial0.print("\t");
+      Serial0.print(pitch);
       Serial0.print("\t");
       Serial0.print(my_bs.target_angle);
       Serial0.print("\t");
@@ -219,7 +225,7 @@ void loop() {
       Serial0.print("\t");
       Serial0.println(my_bs.outputLeft);
     }
-
+    // Serial.println(buffer);
     last_time = current_time;
   }
 }

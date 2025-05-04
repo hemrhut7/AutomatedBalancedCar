@@ -13,7 +13,7 @@ class Nano33Sensor
         uint8_t buffer[LEN_MSG];
         uint8_t status = 0;
         bool newData = false;
-        my_data_3f gyro, accl, cali_gyro, euler;
+        my_data_3f gyro, accl, euler, mag;
         my_data_u4 time, bar, temp;
 
         void parseData();
@@ -27,7 +27,7 @@ class Nano33Sensor
         float getTime() { return time.ulong_val * 1e-6; }
         my_data_3f getGyro() { return gyro; }
         my_data_3f getAccl() { return accl; }
-        my_data_3f getcali_gyro() { return cali_gyro; }
+        my_data_3f getMag()  { return mag;  }
         my_data_3f getEuler() { return euler; }
         float getBar() { return bar.float_val;}
         float getTemp() { return temp.float_val; }
