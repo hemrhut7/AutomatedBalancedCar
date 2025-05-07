@@ -35,6 +35,76 @@
     "Includepath": null
   },
   {
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\LPS22HBSensor.cpp",
+    "Include": "Wire.h",
+    "Includepath": "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.2.0\\libraries\\Wire\\src"
+  },
+  {
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\LPS22HBSensor.cpp",
+    "Include": "SPI.h",
+    "Includepath": "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.2.0\\libraries\\SPI\\src"
+  },
+  {
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\LPS22HBSensor.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\LPS22HB_Driver.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\LSM6DS3Sensor.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\LSM6DS3_ACC_GYRO_Driver.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\bmi2.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\bmi270.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\bmi270_context.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\bmi270_legacy.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\bmi270_maximum_fifo.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\bmi2_ois.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\bmm150.c",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\myBTSensor.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
     "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\myI2CSensor.cpp",
     "Include": "",
     "Includepath": null
@@ -43,11 +113,6 @@
     "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\myMessage.cpp",
     "Include": "",
     "Includepath": null
-  },
-  {
-    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\mySPISensor.cpp",
-    "Include": "SPI.h",
-    "Includepath": "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.2.0\\libraries\\SPI\\src"
   },
   {
     "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\mySPISensor.cpp",
@@ -76,6 +141,11 @@
   },
   {
     "Sourcefile": "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.2.0\\libraries\\BluetoothSerial\\src\\BluetoothSerial.cpp",
+    "Include": "",
+    "Includepath": null
+  },
+  {
+    "Sourcefile": "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.2.0\\libraries\\Wire\\src\\Wire.cpp",
     "Include": "",
     "Includepath": null
   },

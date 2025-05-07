@@ -19,6 +19,7 @@
                 "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.2.0\\variants\\nodemcu-32s",
                 "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor",
                 "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.2.0\\libraries\\BluetoothSerial\\src",
+                "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.2.0\\libraries\\Wire\\src",
                 "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\esp32\\hardware\\esp32\\3.2.0\\libraries\\SPI\\src",
                 "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\esp32\\tools\\esp-x32\\2411\\xtensa-esp-elf\\include\\c++\\14.2.0",
                 "C:\\Users\\hemrh\\AppData\\Local\\Arduino15\\packages\\esp32\\tools\\esp-x32\\2411\\xtensa-esp-elf\\include\\c++\\14.2.0\\xtensa-esp-elf\\esp32",

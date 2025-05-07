@@ -31,10 +31,11 @@ const unsigned long interval = 50; // 列印間隔 (ms)
 float target_speed = 0;
 float target_speed2 = 3;
 uint8_t read_type = MSG;
+SYSTEM_STATE sys_state = INITIALIZING;
 
 float pitch = 0, wx = 0, wz = 0, vel = 0;
 bool enable_PID = false;
-int fs = 0;
+float dt = 0;
 
 
 void setupPCNT() {
@@ -86,17 +87,20 @@ int32_t getPCNTCount(pcnt_unit_t unit) {
 void setup() {
   // 初始化串口
   Serial.begin(115200);
-  Serial2.begin(230400, SERIAL_8N1, 16, 17);
+  Serial2.begin(230400, SERIAL_8N1, 16, 17);  // rx:16, tx:17
 
   #ifdef ENALBE_BT
     SerialBT.begin("ABC_BT"); // Bluetooth 裝置名稱
   #endif
+  Serial.println("Serial Setting...");
 
   // 初始化電機
-  motorR.setDirection(-1);
-  // pinMode(MOTOR_R_DTBY_PIN, OUTPUT);
-  // digitalWrite(MOTOR_R_DTBY_PIN, HIGH); // 啟動電機
+  motorL.setDirection(-1);
   setupPCNT();
+  Serial.println("Motor Setting...");
+
+  sys_state = IMU_MEASURING;
+  Serial.println("Start Working...");
   last_time = millis();
 }
 
@@ -112,7 +116,7 @@ void loop() {
         pitch = sensor.getEuler().float_val[0];
         wx = 0.2*omg.float_val[0]+0.8*wx;
         wz = omg.float_val[2];
-        fs = int(1 / (sensor.getTime() - last_imu_time));
+        dt = sensor.getTime() - last_imu_time;
         last_imu_time = sensor.getTime();
 
         if (enable_PID) {
@@ -185,7 +189,7 @@ void loop() {
       // index = appendValue2Str(buffer, 256, index, my_bs.target_rateX, 3);
       // index = appendValue2Str(buffer, 256, index, vel, 2);
       // index = appendValue2Str(buffer, 256, index, my_bs.outputLeft, 2);
-      Serial.print(fs);
+      Serial.print(dt, 3);
       Serial.print("\t");
       Serial.print(my_bs.current_rateX);
       Serial.print("\t");
@@ -202,6 +206,8 @@ void loop() {
     // Serial.println(buffer);
     last_time = current_time;
   }  
+
+  blinkLED(sys_state);
 }
 
 void checkCommand(String command) {
