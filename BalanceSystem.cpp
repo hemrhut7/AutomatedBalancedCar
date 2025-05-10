@@ -64,21 +64,21 @@ void MotorPID::setPID(float kp, float ki, float kd) {
 }
 
 void MotorPID::setTargetSpeed(float target_speed) {   
-    this->target_speed = max(min(target_speed, MAX_VEL), -MAX_VEL);
+    this->target_speed = -max(min(target_speed, MAX_VEL), -MAX_VEL);
 }
 
 void MotorPID::updateCurrentSpeed(int32_t count) {
+    unsigned long currentTime = millis();
     if (last_time > 0){
-        unsigned long currentTime = micros();
         unsigned long dt = currentTime - last_time;
-        if (dt < 10000) return; // 最小間隔 10ms
+        if (dt < 10) return; // 最小間隔 10ms
 
-        speed = count * COUNTER2RAD / dt * 1000000.0 * dir_scale;
+        speed = count * COUNTER2RAD / dt * 1000.0 * dir_scale;
         pwm = max(min(pid.compute(target_speed, speed)+pwm, 255.0f), -255.0f);
         driveMotor(pwm);
     }
     
-    last_time = micros();
+    last_time = currentTime;
 }
 
 void MotorPID::reset() {

@@ -23,8 +23,9 @@ class Nano33Sensor
         ~Nano33Sensor();
         bool readData();
         void printByte();
+        void printBuffer();
         bool isNewData() { return newData; }
-        float getTime() { return time.ulong_val * 1e-6; }
+        float getTime() { return time.ulong_val * 1e-3; }
         my_data_3f getGyro() { return gyro; }
         my_data_3f getAccl() { return accl; }
         my_data_3f getMag()  { return mag;  }
@@ -32,6 +33,10 @@ class Nano33Sensor
         float getBar() { return bar.float_val;}
  
 };
-    
+
+
+bool parseCommand(Stream& port, uint8_t *buffer);
+void sendPIDMessage(Stream &port, float a, float target_a, float b, float target_b, float c, float target_c);
+uint8_t writeFloat2Buffer(float value, uint8_t *buffer);
 
 #endif

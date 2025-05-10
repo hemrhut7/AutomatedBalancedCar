@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 #include <deque>
-
+#define TIME_SCALE 0.99998882
 
 #define MOTOR_L_DIR1_PIN    5
 #define MOTOR_L_DIR2_PIN    18

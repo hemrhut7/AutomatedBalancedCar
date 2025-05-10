@@ -25,10 +25,7 @@ MotorPID motorR(2, 4, 0, 21, 25, 26);
 
 
 
-float last_imu_time = 0;
-unsigned long last_time = 0; // 上次計算時間
-const unsigned long interval = 50; // 列印間隔 (ms)
-
+float last_imu_time = 0, last_output_time = 0;
 float target_speed = 0;
 float target_speed2 = 3;
 uint8_t read_type = MSG;
@@ -89,6 +86,7 @@ void setup() {
   // 初始化串口
   Serial0.begin(115200);
   Serial2.begin(230400, SERIAL_8N1, 16, 17); // rx:16, tx:17
+  Serial2.print('1');
 
 
 
@@ -96,127 +94,100 @@ void setup() {
   Serial0.println("Serial Setting...");
 
   // 初始化電機
-  motorL.setDirection(-1);
+  motorR.setDirection(-1);
   setupPCNT();
   Serial0.println("Motor Setting...");
 
   sys_state = IMU_MEASURING;
   Serial0.println("Start Working...");
-  last_time = millis();
 }
 
 void loop() {
-  unsigned long current_time = millis();
   if (Serial2.available()){
     if (sensor.readData()){
-        motorL.updateCurrentSpeed(getPCNTCount(PCNT_UNIT_0));
-        motorR.updateCurrentSpeed(getPCNTCount(PCNT_UNIT_1));
-        vel = (motorL.getSpeed() + motorR.getSpeed()) / 2;
+      motorL.updateCurrentSpeed(getPCNTCount(PCNT_UNIT_0));
+      motorR.updateCurrentSpeed(getPCNTCount(PCNT_UNIT_1));
+      vel = (motorL.getSpeed() + motorR.getSpeed()) / 2;
 
-        my_data_3f omg = sensor.getGyro();
-        pitch = sensor.getEuler().float_val[0];
-        wx = 0.2*omg.float_val[0]+0.8*wx;
-        wz = omg.float_val[2];
-        dt = sensor.getTime() - last_imu_time;
-        last_imu_time = sensor.getTime();
+      my_data_3f omg = sensor.getGyro();
+      pitch = sensor.getEuler().float_val[0];
+      wx = 0.2 * omg.float_val[0] + 0.8 * wx;
+      wz = omg.float_val[2];
+      dt = sensor.getTime() - last_imu_time;
+      last_imu_time = sensor.getTime();
 
-        if (enable_PID) {
-            my_bs.updateState(current_time, vel, pitch, wx, wz);
-            motorL.setTargetSpeed(my_bs.outputLeft);
-            motorR.setTargetSpeed(my_bs.outputRight);
-        }
+      if (enable_PID) {
+          my_bs.updateState(millis(), vel, pitch, wx, wz);
+          motorL.setTargetSpeed(my_bs.outputLeft);
+          motorR.setTargetSpeed(my_bs.outputRight);
+      }
+
+      if (read_type == IMU){ sensor.printBuffer(); }
     }
   }
 
   if (Serial0.available()) {
-    String command = Serial0.readStringUntil('\n');
-    checkCommand(command);
+    checkCommand(Serial0.readStringUntil('\n'));
 
     // chagne target speed here
     // motorL.setTargetSpeed(target_speed);
     // motorR.setTargetSpeed(target_speed);
   }
-# 146 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
+
+
+
+
+
+
+
+  outputTask();
+  // blinkLED(sys_state);
+}
+
+void outputTask(){
   // print current state every 100ms
-  if (current_time - last_time >= interval) {
-    // char buffer[256];
-    // int index = 0;
+  if (last_imu_time - last_output_time >= 0.1) {
+    last_output_time = last_imu_time;
+    char buffer[100];
+    int index = 0;
     if (read_type == WHEEL){
-      // index = appendValue2Str(buffer, 256, index, target_speed, 2);
-      // index = appendValue2Str(buffer, 256, index, motorL.getSpeed(), 2);
-      // index = appendValue2Str(buffer, 256, index, motorR.getSpeed(), 2);
-      // index = appendValue2Str(buffer, 256, index, motorL.pwm, 0);
-      // index = appendValue2Str(buffer, 256, index, motorR.pwm, 0);
-
-      Serial0.print(target_speed);
-      Serial0.print("\t");
-      Serial0.print(motorL.getSpeed());
-      Serial0.print("\t");
-      Serial0.print(motorR.getSpeed());
-      Serial0.print("\t");
-      Serial0.print(motorL.pwm, 0);
-      Serial0.print("\t");
-      Serial0.println(motorR.pwm, 0);
-    }
-
-    else if (read_type == IMU){
-        my_data_3f euler = sensor.getEuler();
-        // my_data_3f gyro = sensor.getGyro();
-        // index = appendValue2Str(buffer, 256, index, sensor.getTime(), 3);
-        // index = appendValue2Str(buffer, 256, index, gyro.float_val[0], 3);
-        // index = appendValue2Str(buffer, 256, index, gyro.float_val[2], 3);
-        // index = appendValues2Str(buffer, 256, index, euler.float_val, 3, 1);
-
-        Serial0.print(sensor.getTime());
-        Serial0.print("\t");
-        Serial0.print(euler.float_val[0]);
-        Serial0.print("\t");
-        Serial0.print(euler.float_val[1]);
-        Serial0.print("\t");
-        Serial0.println(euler.float_val[2]);
+      index = appendValue2Str(buffer, 100, index, target_speed, 2);
+      index = appendValue2Str(buffer, 100, index, motorL.getSpeed(), 2);
+      index = appendValue2Str(buffer, 100, index, motorR.getSpeed(), 2);
+      index = appendValue2Str(buffer, 100, index, motorL.pwm, 1);
+      index = appendValue2Str(buffer, 100, index, motorR.pwm, 1);
     }
 
     else if (read_type == MSG){
-      // index = appendValue2Str(buffer, 256, index, pitch, 1);
-      // index = appendValue2Str(buffer, 256, index, my_bs.target_angle, 1);
-      // index = appendValue2Str(buffer, 256, index, my_bs.current_rateX, 3);
-      // index = appendValue2Str(buffer, 256, index, my_bs.target_rateX, 3);
-      // index = appendValue2Str(buffer, 256, index, vel, 2);
-      // index = appendValue2Str(buffer, 256, index, my_bs.outputLeft, 2);
-      Serial0.print(dt, 3);
-      Serial0.print("\t");
-      Serial0.print(my_bs.current_rateX);
-      Serial0.print("\t");
-      Serial0.print(my_bs.target_rateX);
-      Serial0.print("\t");
-      Serial0.print(pitch);
-      Serial0.print("\t");
-      Serial0.print(my_bs.target_angle);
-      Serial0.print("\t");
-      Serial0.print(vel);
-      Serial0.print("\t");
-      Serial0.println(my_bs.outputLeft);
+      index = appendValue2Str(buffer, 100, index, pitch, 1);
+      index = appendValue2Str(buffer, 100, index, my_bs.target_angle, 1);
+      index = appendValue2Str(buffer, 100, index, my_bs.current_rateX, 3);
+      index = appendValue2Str(buffer, 100, index, my_bs.target_rateX, 3);
+      index = appendValue2Str(buffer, 100, index, vel, 2);
+      index = appendValue2Str(buffer, 100, index, my_bs.outputLeft, 2);
     }
-    // Serial.println(buffer);
-    last_time = current_time;
-  }
+    if (index > 0){ Serial0.println(buffer); }
 
-  blinkLED(sys_state);
+
+
+
+  }
 }
 
 void checkCommand(String command) {
   command.trim();
+  Serial0.println(command);
   if (command == "0") {
     digitalWrite(21, 0x0); // 停止電機
+    enable_PID = false;
+  }
+  else if (command == "1") {
     motorL.pwm = 0;
     motorR.pwm = 0;
     target_speed = 0;
     my_bs.reset();
     motorL.reset();
     motorR.reset();
-    enable_PID = false;
-  }
-  else if (command == "1") {
     digitalWrite(21, 0x1);
     enable_PID = true;
   }
@@ -254,6 +225,14 @@ void checkCommand(String command) {
 
     // 驗證是否成功解析三個浮點數
     if (valueIndex == 3) {
+      my_bs.reset();
+      motorL.pwm = 0;
+      motorR.pwm = 0;
+      target_speed = 0;
+      motorL.reset();
+      motorR.reset();
+      Serial0.println(command);
+
       if (pidType == 'A') {
         my_bs.setAnglePID(values[0], values[1], values[2]);
       }
@@ -264,10 +243,10 @@ void checkCommand(String command) {
         motorL.setPID(values[0], values[1], values[2]);
         motorR.setPID(values[0], values[1], values[2]);
       }
-      else if (pidType == 'S') {
+      else if (pidType == 'V') {
         my_bs.setSpeedPID(values[0], values[1], values[2]);
       }
-      else if (pidType == 'T0') {
+      else if (pidType == 'T') {
         my_bs.setTurnPID(values[0], values[1], values[2]);
       }
       else {

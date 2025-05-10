@@ -100,11 +100,6 @@
     "Includepath": null
   },
   {
-    "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\myBTSensor.cpp",
-    "Include": "",
-    "Includepath": null
-  },
-  {
     "Sourcefile": "C:\\Users\\hemrh\\Documents\\Arduino\\libraries\\myArduinoSensor\\myI2CSensor.cpp",
     "Include": "",
     "Includepath": null
