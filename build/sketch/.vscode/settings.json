@@ -35,5 +35,6 @@
         "format": "cpp",
         "span": "cpp",
         "text_encoding": "cpp"
-    }
+    },
+    "C_Cpp.default.compilerPath": "C:/Users/hemrh/AppData/Local/Arduino15/packages/esp32/tools/esp-x32/2411/bin/xtensa-esp32-elf-g++"
 }

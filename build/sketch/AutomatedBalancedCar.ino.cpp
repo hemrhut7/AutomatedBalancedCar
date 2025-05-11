@@ -5,7 +5,7 @@
 #include "BluetoothSerial.h"
 #include <driver/pcnt.h>
 
-// #define ENALBE_BT
+#define ENALBE_BT
 
 enum {
   WHEEL,
@@ -25,9 +25,8 @@ MotorPID motorR(MOTOR_R_PWM_PIN, MOTOR_R_DIR1_PIN, MOTOR_R_DIR2_PIN, MOTOR_R_DTB
 BluetoothSerial SerialBT;
 #endif
 
-float last_imu_time = 0, last_output_time = 0;
-float target_speed = 0;
-float target_speed2 = 3;
+float imu_time = 0, last_output_time = 0;
+float target_speed = 0, target_speed2 = 3;
 uint8_t read_type = MSG;
 SYSTEM_STATE sys_state = INITIALIZING;
 
@@ -36,19 +35,19 @@ bool enable_PID = false;
 float dt = 0;
 
 
-#line 38 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
+#line 37 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
 void setupPCNT();
-#line 77 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
+#line 76 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
 int32_t getPCNTCount(pcnt_unit_t unit);
-#line 84 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
+#line 83 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
 void setup();
-#line 104 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
+#line 103 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
 void loop();
-#line 146 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
+#line 145 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
 void outputTask();
-#line 176 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
+#line 184 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
 void checkCommand(String command);
-#line 38 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
+#line 37 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
 void setupPCNT() {
     // 配置左電機 (Unit 0)
     pcnt_config_t pcnt_config_l = {
@@ -126,8 +125,8 @@ void loop() {
       pitch = sensor.getEuler().float_val[0];
       wx = 0.2 * omg.float_val[0] + 0.8 * wx;
       wz = omg.float_val[2];
-      dt = sensor.getTime() - last_imu_time;
-      last_imu_time = sensor.getTime();
+      dt = sensor.getTime() - imu_time;
+      imu_time = sensor.getTime();
 
       if (enable_PID) {
           my_bs.updateState(millis(), vel, pitch, wx, wz);
@@ -142,7 +141,7 @@ void loop() {
   if (Serial.available()) {
     checkCommand(Serial.readStringUntil('\n'));
 
-    // chagne target speed here
+    // chagne target speed here, for tunning motor PID
     // motorL.setTargetSpeed(target_speed);
     // motorR.setTargetSpeed(target_speed);
   }
@@ -159,10 +158,18 @@ void loop() {
 
 void outputTask(){
   // print current state every 100ms
-  if (last_imu_time - last_output_time >= 0.1) {
-    last_output_time = last_imu_time;
+  if (imu_time - last_output_time >= 0.1) {
     char buffer[100];
     int index = 0;
+
+    if (read_type == NONE) {
+      index = appendValue2Str(buffer, 100, index, imu_time - last_output_time, 3);
+      index = appendValue2Str(buffer, 100, index, last_output_time, 3);
+      index = appendValue2Str(buffer, 100, index, imu_time, 3);
+    }
+    
+    last_output_time = imu_time;
+    
     if (read_type == WHEEL){
       index = appendValue2Str(buffer, 100, index, target_speed, 2);
       index = appendValue2Str(buffer, 100, index, motorL.getSpeed(), 2);
@@ -182,7 +189,8 @@ void outputTask(){
     if (index > 0){ Serial.println(buffer); }
 
     #ifdef ENALBE_BT
-    sendPIDMessage(SerialBT, pitch, my_bs.target_angle, wx, my_bs.target_rateX, vel, my_bs.outputLeft);
+    // sendBTMessage(SerialBT, pitch, my_bs.target_angle, wx, my_bs.target_rateX, vel, my_bs.outputLeft);
+    sendBTMessage(SerialBT, pitch, my_bs.target_angle, wx, my_bs.target_rateX, vel, imu_time);
     #endif
   }  
 }
@@ -238,13 +246,13 @@ void checkCommand(String command) {
 
     // 驗證是否成功解析三個浮點數
     if (valueIndex == 3) {
-      my_bs.reset();
+      Serial.println(command);
       motorL.pwm = 0;
       motorR.pwm = 0;
       target_speed = 0; 
+      my_bs.reset();
       motorL.reset();
       motorR.reset();
-      Serial.println(command);
 
       if (pidType == 'A') {
         my_bs.setAnglePID(values[0], values[1], values[2]);

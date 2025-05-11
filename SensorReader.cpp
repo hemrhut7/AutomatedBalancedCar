@@ -135,40 +135,61 @@ bool parseCommand(Stream &port, uint8_t *buffer){
     return bytes_received == len_msg;
 }
 
-void sendPIDMessage(Stream &port, float a, float target_a, float b, float target_b, float c, float target_c){
-    const uint8_t header = 0x7B;
-    uint8_t index = 0;
-    uint8_t buffer[23];
+void sendBTMessage(Stream &port, float a, float target_a, float b, float target_b, float c, float target_c){
+    uint8_t buffer[23] = {0x7B, 0x00};
+    uint8_t *ptr = buffer + 2;
 
-    buffer[index++] = header;
-    buffer[index++] = 0;
-    
-    index += writeFloat2Buffer(a, buffer+index);
-    index += writeFloat2Buffer(target_a, buffer+index);
-    index += writeFloat2Buffer(0, buffer+index);
+    // 將浮點數轉為整數並寫入大端格式
+    writeFloat(a, ptr); ptr += 2;
+    writeFloat(target_a, ptr); ptr += 2;
+    *ptr++ = 0; *ptr++ = 0; // 直接寫入0
 
-    index += writeFloat2Buffer(b, buffer+index);
-    index += writeFloat2Buffer(target_b, buffer+index);
-    index += writeFloat2Buffer(0, buffer+index);
+    writeFloat(b, ptr); ptr += 2;
+    writeFloat(target_b, ptr); ptr += 2;
+    *ptr++ = 0; *ptr++ = 0;
 
-    index += writeFloat2Buffer(c, buffer+index);
-    index += writeFloat2Buffer(target_c, buffer+index);
-    index += writeFloat2Buffer(0, buffer+index);
+    writeFloat(c, ptr); ptr += 2;
+    writeFloat(target_c, ptr); ptr += 2;
+    *ptr++ = 0; *ptr++ = 0;
 
-    index += writeFloat2Buffer(12.0f, buffer+index);
-    *(buffer + index) = cal_xor_checksum(buffer, 22);
+    writeFloat(12.0f, ptr); ptr += 2;
+    buffer[22] = cal_xor_checksum(buffer, 22);
     port.write(buffer, 23);
+
+    // uint8_t index = 2
+    // index += writeFloat2Buffer(a, buffer+index);
+    // index += writeFloat2Buffer(target_a, buffer+index);
+    // index += writeFloat2Buffer(0, buffer+index);
+
+    // index += writeFloat2Buffer(b, buffer+index);
+    // index += writeFloat2Buffer(target_b, buffer+index);
+    // index += writeFloat2Buffer(0, buffer+index);
+
+    // index += writeFloat2Buffer(c, buffer+index);
+    // index += writeFloat2Buffer(target_c, buffer+index);
+    // index += writeFloat2Buffer(0, buffer+index);
+
+    // index += writeFloat2Buffer(12.0f, buffer+index);
+    // *(buffer + index) = cal_xor_checksum(buffer, 22);
+    
 }
 
-uint8_t writeFloat2Buffer(float value, uint8_t *buffer){
-    my_data_u2 int_value;
-    int_value.short_val = value * 1e3;
+// uint8_t writeFloat2Buffer(float value, uint8_t *buffer){
+//     my_data_u2 int_value;
+//     int_value.short_val = value * 1e3;
 
-    //to small-endian
-    memcpy(buffer, int_value.bin_val, 2);
+//     //to small-endian
+//     // memcpy(buffer, int_value.bin_val, 2);
 
-    // to big-endian
-    // buffer[0] = (int_value.ushort_val >> 0) & 0xFF;  // LSB
-    // buffer[1] = (int_value.ushort_val >> 8) & 0xFF;  // MSB
-    return 2;
+//     // to big-endian
+//     buffer[1] = (int_value.ushort_val >> 0) & 0xFF;  // LSB
+//     buffer[0] = (int_value.ushort_val >> 8) & 0xFF;  // MSB
+//     return 2;
+// }
+
+// Inline function for float conversion
+inline void writeFloat(float value, uint8_t* buffer) {
+    int16_t int_value = (int16_t)(value * 1000.0f);
+    buffer[0] = (int_value >> 8) & 0xFF; // MSB
+    buffer[1] = int_value & 0xFF;       // LSB
 }

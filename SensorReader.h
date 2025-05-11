@@ -2,8 +2,8 @@
 #define SENSOR_READER_H
 
 #include "myMessage.h"
-#define LEN_DATA 4*14
-#define LEN_MSG 2+LEN_DATA+2
+#define LEN_DATA 4 * 14             // time (4), omg (12), acc (12), mag (12), ori (12), bar (4) = 56 bytes
+#define LEN_MSG 2 + LEN_DATA + 2    // header (2) + data (56) + CRC-16 (2) = 60 bytes
 
 class Nano33Sensor
 {
@@ -36,7 +36,8 @@ class Nano33Sensor
 
 
 bool parseCommand(Stream& port, uint8_t *buffer);
-void sendPIDMessage(Stream &port, float a, float target_a, float b, float target_b, float c, float target_c);
-uint8_t writeFloat2Buffer(float value, uint8_t *buffer);
+void sendBTMessage(Stream &port, float a, float target_a, float b, float target_b, float c, float target_c);
+// uint8_t writeFloat2Buffer(float value, uint8_t *buffer);
+inline void writeFloat(float value, uint8_t* buffer);
 
 #endif
