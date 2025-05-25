@@ -1,17 +1,18 @@
 #line 1 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
-#include <BalanceSystem.h>
 #include <Arduino.h>
-#include "SensorReader.h"
 #include "BluetoothSerial.h"
 #include <driver/pcnt.h>
+#include "src/BalanceSystem.h"
+#include "src/SensorReader.h"
 
 #define ENALBE_BT
 
-enum {
+enum OUTPUT_MODE{
   WHEEL,
   BYTE,
   MSG,
   IMU,
+  TIME,
   NONE
 };
 
@@ -25,14 +26,13 @@ MotorPID motorR(MOTOR_R_PWM_PIN, MOTOR_R_DIR1_PIN, MOTOR_R_DIR2_PIN, MOTOR_R_DTB
 BluetoothSerial SerialBT;
 #endif
 
-float imu_time = 0, last_output_time = 0;
-float target_speed = 0, target_speed2 = 3;
-uint8_t read_type = MSG;
+float imu_time = 0, last_output_time = 0, last_reset_taget_rate_time = 0;
+float target_speed = 0;
+OUTPUT_MODE read_type = MSG;
 SYSTEM_STATE sys_state = INITIALIZING;
 
 float pitch = 0, wx = 0, wz = 0, vel = 0;
-bool enable_PID = false;
-float dt = 0;
+bool enable_PID = false, enable_motor_tunning = false;
 
 
 #line 37 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
@@ -41,11 +41,11 @@ void setupPCNT();
 int32_t getPCNTCount(pcnt_unit_t unit);
 #line 83 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
 void setup();
-#line 103 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
+#line 101 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
 void loop();
-#line 145 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
+#line 168 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
 void outputTask();
-#line 184 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
+#line 201 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
 void checkCommand(String command);
 #line 37 "C:\\Users\\hemrh\\Documents\\GitHub\\AutomatedBalancedCar\\AutomatedBalancedCar.ino"
 void setupPCNT() {
@@ -109,71 +109,89 @@ void setup() {
   motorR.setDirection(-1);
   setupPCNT();
   Serial.println("Motor Setting...");
-
-  sys_state = IMU_MEASURING;
   Serial.println("Start Working...");
 }
 
 void loop() {
   if (Serial2.available()){
     if (sensor.readData()){
-      motorL.updateCurrentSpeed(getPCNTCount(PCNT_UNIT_0));
-      motorR.updateCurrentSpeed(getPCNTCount(PCNT_UNIT_1));
-      vel = (motorL.getSpeed() + motorR.getSpeed()) / 2;
+      motorL.updateCurrentRate(getPCNTCount(PCNT_UNIT_0));
+      motorR.updateCurrentRate(getPCNTCount(PCNT_UNIT_1));
+      vel = (motorL.getRate() + motorR.getRate()) / 2;
 
+      float dt = sensor.getTime() - imu_time;
       my_data_3f omg = sensor.getGyro();
       pitch = sensor.getEuler().float_val[0];
       wx = 0.2 * omg.float_val[0] + 0.8 * wx;
       wz = omg.float_val[2];
-      dt = sensor.getTime() - imu_time;
       imu_time = sensor.getTime();
 
       if (enable_PID) {
-          my_bs.updateState(millis(), vel, pitch, wx, wz);
-          motorL.setTargetSpeed(my_bs.outputLeft);
-          motorR.setTargetSpeed(my_bs.outputRight);
+          my_bs.updateState(micros(), vel, pitch, wx, wz);
+          motorL.setTargetRate(my_bs.outputLeft);
+          motorR.setTargetRate(my_bs.outputRight);
+      }
+
+      else if (enable_motor_tunning) {
+      
+        if (sensor.getTime() - last_reset_taget_rate_time >= 0.1) {
+          last_reset_taget_rate_time = sensor.getTime();
+        }
+      
+        else if (last_reset_taget_rate_time > sensor.getTime()) {
+          last_reset_taget_rate_time = sensor.getTime();
+        }
+        
+        motorL.setTargetRate(target_speed);
+        motorR.setTargetRate(target_speed);
       }
 
       if (read_type == IMU){ sensor.printBuffer(); }
+      else if (read_type == TIME) { Serial.println(dt); }
     }
+
+    if (sys_state == INITIALIZING) sys_state = IMU_MEASURING;
+    blinkLED(sys_state);
   }
 
-  if (Serial.available()) {
-    checkCommand(Serial.readStringUntil('\n'));
-
-    // chagne target speed here, for tunning motor PID
-    // motorL.setTargetSpeed(target_speed);
-    // motorR.setTargetSpeed(target_speed);
+  if (Serial.available()) { 
+    checkCommand(readCurrentBytes(Serial)); 
   }
 
   #ifdef ENALBE_BT
   if (SerialBT.available()) {
-    checkCommand(SerialBT.readStringUntil('\n'));
+    ParseResult result = readSerialPacket(SerialBT);
+    if (result.success){
+      if (result.type == 0){ 
+        Serial.print(result.data[0]);
+        Serial.print(", ");
+        Serial.print(result.data[1]);
+        Serial.print(", ");
+        Serial.println(result.data[2]);
+      }
+      else if (result.type == 1){
+        checkCommand(result.string_data);
+      }
+    }
   }
   #endif
   
   outputTask();
-  // blinkLED(sys_state);
 }
 
 void outputTask(){
+  if (last_output_time > imu_time) { last_output_time = imu_time; }
+
   // print current state every 100ms
-  if (imu_time - last_output_time >= 0.1) {
+  if (imu_time - last_output_time >= 0.05) {
     char buffer[100];
     int index = 0;
-
-    if (read_type == NONE) {
-      index = appendValue2Str(buffer, 100, index, imu_time - last_output_time, 3);
-      index = appendValue2Str(buffer, 100, index, last_output_time, 3);
-      index = appendValue2Str(buffer, 100, index, imu_time, 3);
-    }
-    
     last_output_time = imu_time;
     
     if (read_type == WHEEL){
-      index = appendValue2Str(buffer, 100, index, target_speed, 2);
-      index = appendValue2Str(buffer, 100, index, motorL.getSpeed(), 2);
-      index = appendValue2Str(buffer, 100, index, motorR.getSpeed(), 2);
+      index = appendValue2Str(buffer, 100, index, -target_speed, 2);
+      index = appendValue2Str(buffer, 100, index, motorL.getRate(), 2);
+      index = appendValue2Str(buffer, 100, index, motorR.getRate(), 2);
       index = appendValue2Str(buffer, 100, index, motorL.pwm, 1);
       index = appendValue2Str(buffer, 100, index, motorR.pwm, 1);
     } 
@@ -189,42 +207,58 @@ void outputTask(){
     if (index > 0){ Serial.println(buffer); }
 
     #ifdef ENALBE_BT
-    // sendBTMessage(SerialBT, pitch, my_bs.target_angle, wx, my_bs.target_rateX, vel, my_bs.outputLeft);
-    sendBTMessage(SerialBT, pitch, my_bs.target_angle, wx, my_bs.target_rateX, vel, imu_time);
+    sendBTMessage(SerialBT, vel, 0, pitch, my_bs.target_angle, vel, -my_bs.outputLeft);
     #endif
   }  
 }
 
 void checkCommand(String command) {
   command.trim();
+  Serial.print("Received: ");
   Serial.println(command);
   if (command == "0") {
+    target_speed = 0; 
+    my_bs.reset();
+    motorL.reset();
+    motorR.reset();
     digitalWrite(MOTOR_R_DTBY_PIN, LOW); // 停止電機
     enable_PID = false;
+    enable_motor_tunning = false;
+
   } 
   else if (command == "1") {
-    motorL.pwm = 0;
-    motorR.pwm = 0;
     target_speed = 0; 
     my_bs.reset();
     motorL.reset();
     motorR.reset();
     digitalWrite(MOTOR_R_DTBY_PIN, HIGH); 
     enable_PID = true;
+    enable_motor_tunning = false;
   }
-  else if (command == "+")      {      target_speed += 3;  } 
-  else if (command == "-")      {      target_speed -= 3;  } 
-  else if (command == "++")     {      target_speed += 10; } 
-  else if (command == "--")     {      target_speed -= 10; } 
-  else if (command == "a")      {      target_speed = 0;   } 
-  else if (command == "b")      {      target_speed = 10;  } 
+  else if (command == "wheel")  { 
+    read_type = WHEEL;  
+    enable_PID = false;
+    enable_motor_tunning = true;
+    target_speed = 0; 
+    my_bs.reset();
+    motorL.reset();
+    motorR.reset();
+    digitalWrite(MOTOR_R_DTBY_PIN, HIGH);
+  }
+  else if (command == "+")      { target_speed += 3;  } 
+  else if (command == "-")      { target_speed -= 3;  } 
+  else if (command == "++")     { target_speed += 10; } 
+  else if (command == "--")     { target_speed -= 10; } 
+  else if (command == "a")      { target_speed = 0;   } 
+  else if (command == "b")      { target_speed = 10;  } 
   else if (command == "byte")   { read_type = BYTE;   } 
   else if (command == "msg")    { read_type = MSG;    } 
-  else if (command == "wheel")  { read_type = WHEEL;  } 
-  else if (command == "imu1")   { Serial2.print('1'); } 
-  else if (command == "imu0")   { Serial2.print('2'); } 
   else if (command == "imu")    { read_type = IMU;    } 
   else if (command == "none")   { read_type = NONE;   }
+  else if (command == "time")   { read_type = TIME;   }
+  else if (command == "LC")     { Serial2.print('2'); }
+  else if (command == "imu1")   { Serial2.print('1'); } 
+  else if (command == "imu0")   { Serial2.print('0'); }
   else if (command.startsWith("PID_")) {
     String data = command.substring(4);
     if (data.length() < 2 || data[1] != '_') {
@@ -249,7 +283,7 @@ void checkCommand(String command) {
       Serial.println(command);
       motorL.pwm = 0;
       motorR.pwm = 0;
-      target_speed = 0; 
+      if (pidType != 'M') { target_speed = 0; }      
       my_bs.reset();
       motorL.reset();
       motorR.reset();

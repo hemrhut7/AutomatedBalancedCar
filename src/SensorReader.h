@@ -35,9 +35,27 @@ class Nano33Sensor
 };
 
 
-bool parseCommand(Stream& port, uint8_t *buffer);
+// 封包解析狀態
+enum ParseState {
+  WAIT_HEADER_1,  // 等待第一個header (0x7B)
+  WAIT_HEADER_2,  // 等待第二個header (0x00)
+  READ_TYPE,      // 讀取類型
+  READ_PAYLOAD_TYPE0, // 讀取type=0的payload
+  READ_CHECKSUM,  // 讀取checksum (type=0)
+  READ_TRAILER,   // 讀取trailer
+  READ_PAYLOAD_TYPE1  // 讀取type=1的字串
+};
+
+// 解析結果結構體
+struct ParseResult {
+  bool success;         // 是否成功解析
+  uint8_t type;         // 封包類型 (0 or 1)
+  int16_t data[3];      // type=0的數據 (三個int16_t)
+  String string_data;   // type=1的字串數據
+};
+
+ParseResult readSerialPacket(Stream &port);
 void sendBTMessage(Stream &port, float a, float target_a, float b, float target_b, float c, float target_c);
-// uint8_t writeFloat2Buffer(float value, uint8_t *buffer);
 inline void writeFloat(float value, uint8_t* buffer);
 
 #endif

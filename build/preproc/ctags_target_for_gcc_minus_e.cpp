@@ -7,32 +7,32 @@
 
 
 
-enum {
+enum OUTPUT_MODE{
   WHEEL,
   BYTE,
   MSG,
   IMU,
+  TIME,
   NONE
 };
 
 BalanceSystem my_bs;
 Nano33Sensor sensor(Serial2);
 MotorPID motorL(19, 5, 18, 21, 32, 33);
-MotorPID motorR(2, 4, 0, 21, 25, 26);
+MotorPID motorR(15, 4, 0, 21, 25, 26);
 
 
 // 藍芽Serial initialization
 BluetoothSerial SerialBT;
 
 
-float imu_time = 0, last_output_time = 0;
-float target_speed = 0, target_speed2 = 3;
-uint8_t read_type = MSG;
+float imu_time = 0, last_output_time = 0, last_reset_taget_rate_time = 0;
+float target_speed = 0;
+OUTPUT_MODE read_type = MSG;
 SYSTEM_STATE sys_state = INITIALIZING;
 
 float pitch = 0, wx = 0, wz = 0, vel = 0;
-bool enable_PID = false;
-float dt = 0;
+bool enable_PID = false, enable_motor_tunning = false;
 
 
 void setupPCNT() {
@@ -96,71 +96,89 @@ void setup() {
   motorR.setDirection(-1);
   setupPCNT();
   Serial0.println("Motor Setting...");
-
-  sys_state = IMU_MEASURING;
   Serial0.println("Start Working...");
 }
 
 void loop() {
   if (Serial2.available()){
     if (sensor.readData()){
-      motorL.updateCurrentSpeed(getPCNTCount(PCNT_UNIT_0));
-      motorR.updateCurrentSpeed(getPCNTCount(PCNT_UNIT_1));
-      vel = (motorL.getSpeed() + motorR.getSpeed()) / 2;
+      motorL.updateCurrentRate(getPCNTCount(PCNT_UNIT_0));
+      motorR.updateCurrentRate(getPCNTCount(PCNT_UNIT_1));
+      vel = (motorL.getRate() + motorR.getRate()) / 2;
 
+      float dt = sensor.getTime() - imu_time;
       my_data_3f omg = sensor.getGyro();
       pitch = sensor.getEuler().float_val[0];
       wx = 0.2 * omg.float_val[0] + 0.8 * wx;
       wz = omg.float_val[2];
-      dt = sensor.getTime() - imu_time;
       imu_time = sensor.getTime();
 
       if (enable_PID) {
-          my_bs.updateState(millis(), vel, pitch, wx, wz);
-          motorL.setTargetSpeed(my_bs.outputLeft);
-          motorR.setTargetSpeed(my_bs.outputRight);
+          my_bs.updateState(micros(), vel, pitch, wx, wz);
+          motorL.setTargetRate(my_bs.outputLeft);
+          motorR.setTargetRate(my_bs.outputRight);
+      }
+
+      else if (enable_motor_tunning) {
+
+        if (sensor.getTime() - last_reset_taget_rate_time >= 0.1) {
+          last_reset_taget_rate_time = sensor.getTime();
+        }
+
+        else if (last_reset_taget_rate_time > sensor.getTime()) {
+          last_reset_taget_rate_time = sensor.getTime();
+        }
+
+        motorL.setTargetRate(target_speed);
+        motorR.setTargetRate(target_speed);
       }
 
       if (read_type == IMU){ sensor.printBuffer(); }
+      else if (read_type == TIME) { Serial0.println(dt); }
     }
+
+    if (sys_state == INITIALIZING) sys_state = IMU_MEASURING;
+    blinkLED(sys_state);
   }
 
   if (Serial0.available()) {
-    checkCommand(Serial0.readStringUntil('\n'));
-
-    // chagne target speed here, for tunning motor PID
-    // motorL.setTargetSpeed(target_speed);
-    // motorR.setTargetSpeed(target_speed);
+    checkCommand(readCurrentBytes(Serial0));
   }
 
 
   if (SerialBT.available()) {
-    checkCommand(SerialBT.readStringUntil('\n'));
+    ParseResult result = readSerialPacket(SerialBT);
+    if (result.success){
+      if (result.type == 0){
+        Serial0.print(result.data[0]);
+        Serial0.print(", ");
+        Serial0.print(result.data[1]);
+        Serial0.print(", ");
+        Serial0.println(result.data[2]);
+      }
+      else if (result.type == 1){
+        checkCommand(result.string_data);
+      }
+    }
   }
 
 
   outputTask();
-  // blinkLED(sys_state);
 }
 
 void outputTask(){
+  if (last_output_time > imu_time) { last_output_time = imu_time; }
+
   // print current state every 100ms
-  if (imu_time - last_output_time >= 0.1) {
+  if (imu_time - last_output_time >= 0.05) {
     char buffer[100];
     int index = 0;
-
-    if (read_type == NONE) {
-      index = appendValue2Str(buffer, 100, index, imu_time - last_output_time, 3);
-      index = appendValue2Str(buffer, 100, index, last_output_time, 3);
-      index = appendValue2Str(buffer, 100, index, imu_time, 3);
-    }
-
     last_output_time = imu_time;
 
     if (read_type == WHEEL){
-      index = appendValue2Str(buffer, 100, index, target_speed, 2);
-      index = appendValue2Str(buffer, 100, index, motorL.getSpeed(), 2);
-      index = appendValue2Str(buffer, 100, index, motorR.getSpeed(), 2);
+      index = appendValue2Str(buffer, 100, index, -target_speed, 2);
+      index = appendValue2Str(buffer, 100, index, motorL.getRate(), 2);
+      index = appendValue2Str(buffer, 100, index, motorR.getRate(), 2);
       index = appendValue2Str(buffer, 100, index, motorL.pwm, 1);
       index = appendValue2Str(buffer, 100, index, motorR.pwm, 1);
     }
@@ -176,28 +194,43 @@ void outputTask(){
     if (index > 0){ Serial0.println(buffer); }
 
 
-    // sendBTMessage(SerialBT, pitch, my_bs.target_angle, wx, my_bs.target_rateX, vel, my_bs.outputLeft);
-    sendBTMessage(SerialBT, pitch, my_bs.target_angle, wx, my_bs.target_rateX, vel, imu_time);
+    sendBTMessage(SerialBT, vel, 0, pitch, my_bs.target_angle, vel, -my_bs.outputLeft);
 
   }
 }
 
 void checkCommand(String command) {
   command.trim();
+  Serial0.print("Received: ");
   Serial0.println(command);
   if (command == "0") {
+    target_speed = 0;
+    my_bs.reset();
+    motorL.reset();
+    motorR.reset();
     digitalWrite(21, 0x0); // 停止電機
     enable_PID = false;
+    enable_motor_tunning = false;
+
   }
   else if (command == "1") {
-    motorL.pwm = 0;
-    motorR.pwm = 0;
     target_speed = 0;
     my_bs.reset();
     motorL.reset();
     motorR.reset();
     digitalWrite(21, 0x1);
     enable_PID = true;
+    enable_motor_tunning = false;
+  }
+  else if (command == "wheel") {
+    read_type = WHEEL;
+    enable_PID = false;
+    enable_motor_tunning = true;
+    target_speed = 0;
+    my_bs.reset();
+    motorL.reset();
+    motorR.reset();
+    digitalWrite(21, 0x1);
   }
   else if (command == "+") { target_speed += 3; }
   else if (command == "-") { target_speed -= 3; }
@@ -207,11 +240,12 @@ void checkCommand(String command) {
   else if (command == "b") { target_speed = 10; }
   else if (command == "byte") { read_type = BYTE; }
   else if (command == "msg") { read_type = MSG; }
-  else if (command == "wheel") { read_type = WHEEL; }
-  else if (command == "imu1") { Serial2.print('1'); }
-  else if (command == "imu0") { Serial2.print('2'); }
   else if (command == "imu") { read_type = IMU; }
   else if (command == "none") { read_type = NONE; }
+  else if (command == "time") { read_type = TIME; }
+  else if (command == "LC") { Serial2.print('2'); }
+  else if (command == "imu1") { Serial2.print('1'); }
+  else if (command == "imu0") { Serial2.print('0'); }
   else if (command.startsWith("PID_")) {
     String data = command.substring(4);
     if (data.length() < 2 || data[1] != '_') {
@@ -236,7 +270,7 @@ void checkCommand(String command) {
       Serial0.println(command);
       motorL.pwm = 0;
       motorR.pwm = 0;
-      target_speed = 0;
+      if (pidType != 'M') { target_speed = 0; }
       my_bs.reset();
       motorL.reset();
       motorR.reset();
